@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, pill, status_chip %}
+{% from "macros.html" import csrf, pill, status_chip, week_chart, page_title %}
 {% from "icons.html" import icon %}
 {% block title %}{{ title }}{% endblock %}
 
@@ -53,38 +53,9 @@
 {% endmacro %}
 
 {% macro chart_card() %}
-<section class="card" aria-labelledby="trend-heading">
-  <div class="card-head">
-    <div>
-      <h2 id="trend-heading">The last 7 days</h2>
-      <p class="muted">Share of each day’s doses that were taken</p>
-    </div>
-    {% if week.rate is not none %}<p class="pill-label">Average {{ week.rate }}%</p>{% endif %}
-  </div>
-  <ol class="bars" aria-label="Doses taken on each of the last 7 days">
-    {% for bar in bars %}
-    <li class="bar-col">
-      <span class="bar-value" aria-hidden="true">{{ '—' if bar.adherence.rate is none else bar.adherence.rate ~ '%' }}</span>
-      <span class="bar-track" aria-hidden="true"><span class="bar-fill band-{{ bar.band }} h-{{ bar.height }}"></span></span>
-      <span class="bar-day" aria-hidden="true">{{ 'Today' if loop.last else bar.day.strftime('%a') }}</span>
-      <span class="bar-tip" aria-hidden="true">
-        {% if bar.adherence.total %}{{ bar.adherence.taken }} of {{ bar.adherence.total }} taken{% if bar.adherence.missed %}, {{ bar.adherence.missed }} missed{% endif %}{% if bar.adherence.skipped %}, {{ bar.adherence.skipped }} skipped{% endif %}
-        {% else %}No doses were due{% endif %}
-      </span>
-      <span class="visually-hidden">
-        {{ bar.day | long_date }}:
-        {% if bar.adherence.total %}{{ bar.adherence.taken }} of {{ bar.adherence.total }} doses taken ({{ bar.adherence.rate }}%){% else %}no doses were due{% endif %}.
-      </span>
-    </li>
-    {% endfor %}
-  </ol>
-  <ul class="legend" aria-label="Colour key">
-    <li><span class="swatch band-good"></span>90% or more</li>
-    <li><span class="swatch band-fair"></span>75 to 89%</li>
-    <li><span class="swatch band-low"></span>Under 75%</li>
-  </ul>
-  <p class="card-link"><a href="{{ url_for('insights.index') }}">See it as a table in Care Weather</a></p>
-</section>
+{% call week_chart(bars, week) %}
+<p class="card-link"><a href="{{ url_for('insights.index') }}">See the days as a table in Care Weather</a></p>
+{% endcall %}
 {% endmacro %}
 
 {% macro weather_card(how_many, wide=False) %}
@@ -232,7 +203,7 @@
 
 <div class="page-head">
   <div>
-    <h1>{{ title }}</h1>
+    {{ page_title('home', title) }}
     <p class="lead">{{ 'How ' ~ profile.elder_name ~ ' is doing' if is_family else profile.elder_name ~ '’s care today' }}</p>
   </div>
 </div>

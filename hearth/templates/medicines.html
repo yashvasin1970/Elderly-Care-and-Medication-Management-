@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, pill %}
+{% from "macros.html" import csrf, pill, page_title %}
+{% from "icons.html" import icon %}
 {% block title %}Medicines{% endblock %}
 
 {% block content %}
 {% set can_change = may('propose_medication_changes') %}
 <div class="page-head">
-  <h1>Medicines</h1>
+  {{ page_title('pill', 'Medicines') }}
   {% if can_change %}
   <a class="button button-primary" href="{{ url_for('medications.new') }}">Add a medicine</a>
   {% endif %}
@@ -18,69 +19,76 @@
 {% endif %}
 
 {% if can_change %}
-<section class="card" aria-labelledby="sentence-heading">
-  <h2 id="sentence-heading">Add one by describing it</h2>
+<section class="card describe-card" aria-labelledby="sentence-heading">
+  <h2 id="sentence-heading">{{ icon('suggest', 26) }}<span>Add one by describing it</span></h2>
   <form method="post" action="{{ url_for('medications.draft') }}">
     {{ csrf() }}
-    <div class="field">
-      <label for="sentence">Describe the medicine in one sentence</label>
-      <p class="hint" id="sentence-hint">
-        For example: “Amlodipine 5 mg every morning after breakfast for 30 days”.
-        {% if ai_enabled %}Gemini reads the sentence; only this sentence is sent, nothing else about you.{% endif %}
-        You check everything before it is saved.
-      </p>
-      <input id="sentence" name="sentence" type="text" maxlength="300" required aria-describedby="sentence-hint">
+    <label for="sentence" class="visually-hidden">Describe the medicine in one sentence</label>
+    <p class="hint" id="sentence-hint">
+      For example: “Amlodipine 5 mg every morning after breakfast for 30 days”.
+      {% if ai_enabled %}Gemini reads the sentence; only this sentence is sent, nothing else about you.{% endif %}
+      You check everything before it is saved.
+    </p>
+    <div class="describe-row">
+      <input id="sentence" name="sentence" type="text" maxlength="300" required aria-describedby="sentence-hint"
+             placeholder="Describe the medicine in one sentence">
+      <button type="submit" class="button button-secondary">Fill in the form for me</button>
     </div>
-    <button type="submit" class="button button-secondary">Fill in the form for me</button>
   </form>
 </section>
 {% endif %}
 
 {% if cards %}
-<ul class="medicine-list">
+<ul class="med-grid">
   {% for card in cards %}
   {% set med = card.medication %}
-  <li class="card medicine">
-    <div class="dose-main">
-      {{ pill(med.pill_color, med.pill_shape) }}
-      <div class="dose-text">
-        <h2>{{ med.name }} <span class="dose-amount">{{ med.dose }}</span></h2>
-        <p class="dose-look">Looks like: {{ med.pill_color }} {{ med.pill_shape }}</p>
+  {% set forecast = card.forecast %}
+  <li class="card med-card">
+    <div class="med-head">
+      <span class="pill-badge">{{ pill(med.pill_color, med.pill_shape, 46) }}</span>
+      <div class="med-title">
+        <h2>{{ med.name }}</h2>
+        <p class="med-sub">{{ med.dose }}{% if med.dose %} · {% endif %}{{ med.pill_color }} {{ med.pill_shape }}</p>
       </div>
       <span class="chip chip-{{ med.criticality.value }}">{{ med.criticality.value | capitalize }}</span>
     </div>
 
+    <ul class="time-chips" aria-label="When it is taken">
+      {% for time in card.times %}<li>{{ icon('clock', 18) }}<span>{{ time }}</span></li>{% endfor %}
+    </ul>
+    {% if card.days and card.days != 'Every day' %}<p class="muted">Only on {{ card.days }}</p>{% endif %}
+
+    {% if med.instructions or med.missed_dose_rule or med.end_date %}
     <dl class="facts">
-      <dt>When</dt>
-      <dd>{{ card.times | join('; ') }}{% if card.days and card.days != 'Every day' %} ({{ card.days }}){% endif %}</dd>
-      {% if med.instructions %}<dt>Instructions</dt><dd>{{ med.instructions }}</dd>{% endif %}
+      {% if med.instructions %}<dt>How to take it</dt><dd>{{ med.instructions }}</dd>{% endif %}
       {% if med.missed_dose_rule %}<dt>If a dose is late</dt><dd>{{ med.missed_dose_rule }}</dd>{% endif %}
       {% if med.end_date %}<dt>Until</dt><dd><time datetime="{{ med.end_date | machine }}">{{ med.end_date | long_date }}</time></dd>{% endif %}
-      <dt>In stock</dt>
-      <dd>
-        {% if card.forecast %}
-        {{ card.forecast.stock }} left, about {{ card.forecast.days_left }} day{{ '' if card.forecast.days_left == 1 else 's' }}
-        (until <time datetime="{{ card.forecast.runs_out_on | machine }}">{{ card.forecast.runs_out_on | short_date }}</time>).
-        {% if card.forecast.needs_refill %}<strong class="warning-text">Time to refill.</strong>{% endif %}
-        {% else %}
-        Not tracked
-        {% endif %}
-      </dd>
     </dl>
+    {% endif %}
+
+    <p class="stock{{ ' stock-low' if forecast and forecast.needs_refill }}">
+      {% if forecast %}
+      <strong>{{ forecast.stock }} left</strong>, about {{ forecast.days_left }} day{{ '' if forecast.days_left == 1 else 's' }}
+      (until <time datetime="{{ forecast.runs_out_on | machine }}">{{ forecast.runs_out_on | short_date }}</time>)
+      {% if forecast.needs_refill %}<span class="chip chip-late">Time to refill</span>{% endif %}
+      {% else %}
+      <span class="muted">Stock is not tracked</span>
+      {% endif %}
+    </p>
 
     {% if can_change %}
-    <div class="button-row">
-      <a class="button button-secondary" href="{{ url_for('medications.edit', medication_id=med.id) }}">Change<span class="visually-hidden"> {{ med.name }}</span></a>
+    <div class="med-actions">
+      <a class="button button-secondary button-small" href="{{ url_for('medications.edit', medication_id=med.id) }}">Change<span class="visually-hidden"> {{ med.name }}</span></a>
       <form method="post" action="{{ url_for('medications.restock', medication_id=med.id) }}" class="inline-form">
         {{ csrf() }}
         <label for="amount-{{ med.id }}">Refilled? Add</label>
         <input id="amount-{{ med.id }}" name="amount" type="number" min="1" max="999" inputmode="numeric" class="input-small" required>
-        <button type="submit" class="button button-quiet">Add to stock<span class="visually-hidden"> of {{ med.name }}</span></button>
+        <button type="submit" class="button button-quiet button-small">Add<span class="visually-hidden"> to the stock of {{ med.name }}</span></button>
       </form>
       <form method="post" action="{{ url_for('medications.stop', medication_id=med.id) }}"
             data-confirm="Stop {{ med.name }}? Its history is kept.">
         {{ csrf() }}
-        <button type="submit" class="button button-danger">Stop<span class="visually-hidden"> {{ med.name }}</span></button>
+        <button type="submit" class="button button-danger button-small">Stop<span class="visually-hidden"> {{ med.name }}</span></button>
       </form>
     </div>
     {% endif %}

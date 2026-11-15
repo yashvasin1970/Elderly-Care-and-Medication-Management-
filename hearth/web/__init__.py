@@ -90,6 +90,7 @@ def _machine(value: date | datetime) -> str:
 
 
 _FILTERS = {
+    "local": _local,
     "clock": _clock,
     "long_date": _long_date,
     "short_date": _short_date,

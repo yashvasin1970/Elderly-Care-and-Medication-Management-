@@ -1,13 +1,23 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf %}
+{% from "macros.html" import csrf, page_title %}
+{% from "icons.html" import icon %}
 {% block title %}Emails sent{% endblock %}
+
+{% set kind_icons = {
+  'upcoming': 'bell', 'nudge': 'bell', 'missed': 'alert', 'appointment': 'calendar',
+  'refill': 'pill', 'checkin': 'people', 'digest': 'weather', 'request': 'suggest',
+  'help': 'phone', 'test': 'info',
+} %}
+{% set status_text = {
+  'sent': 'Sent', 'outbox': 'Recorded', 'failed': 'Not sent', 'queued': 'Waiting',
+} %}
 
 {% block content %}
 <div class="page-head">
-  <h1>Emails sent</h1>
+  {{ page_title('mail', 'Emails sent') }}
   <form method="post" action="{{ url_for('insights.check_now') }}">
     {{ csrf() }}
-    <button type="submit" class="button button-secondary">Check for reminders now</button>
+    <button type="submit" class="button button-secondary">{{ icon('clock', 22) }}<span>Check for reminders now</span></button>
   </form>
 </div>
 <p class="lead">Every email Hearth has sent for this circle, so nothing is said behind anyone’s back.</p>
@@ -19,17 +29,18 @@
 {% endif %}
 
 {% if notifications %}
-<ul class="outbox-list">
+<ul class="mail-list">
   {% for note in notifications %}
-  <li class="card">
-    <details>
+  <li>
+    <details class="mail">
       <summary>
-        <span class="outbox-subject">{{ note.subject }}</span>
-        <span class="muted">
-          To {{ note.recipient }} ·
-          <time datetime="{{ note.created_at | machine }}">{{ note.created_at | day_and_time }}</time> ·
-          {{ {'sent': 'Sent', 'outbox': 'Recorded (demo mode)', 'failed': 'Could not be sent', 'queued': 'Waiting'}[note.status] }}
+        <span class="mail-icon kind-{{ note.kind }}">{{ icon(kind_icons.get(note.kind, 'mail'), 24) }}</span>
+        <span class="mail-main">
+          <span class="outbox-subject">{{ note.subject }}</span>
+          <span class="muted">To {{ note.recipient }} · <time datetime="{{ note.created_at | machine }}">{{ note.created_at | day_and_time }}</time></span>
         </span>
+        <span class="chip mail-status-{{ note.status }}">{{ status_text.get(note.status, note.status) }}{% if note.status == 'outbox' %}<span class="visually-hidden"> (demo mode)</span>{% endif %}</span>
+        <span class="chevron" aria-hidden="true"></span>
       </summary>
       <pre class="email-body">{{ note.body }}</pre>
       {% if note.status == 'failed' and note.error %}<p class="error">{{ note.error }}</p>{% endif %}

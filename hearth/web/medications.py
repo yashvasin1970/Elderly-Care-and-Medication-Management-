@@ -59,7 +59,8 @@ def index() -> str:
         times = []
         for slot in sorted(slots, key=lambda s: slot_time(s, profile.routine)):
             clock = friendly_clock(slot_time(slot, profile.routine))
-            times.append(clock if slot.anchor == FIXED else f"{describe_slot(slot)} ({clock})")
+            label = "" if slot.anchor == FIXED else describe_slot(slot).lower()
+            times.append(f"{clock} · {label}" if label else clock)
         days = consent.days_label(slots[0].days_mask) if slots else ""
         cards.append(MedicineCard(med, times, days, forecasts.get(med.id)))
 

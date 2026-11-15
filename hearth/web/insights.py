@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 
 from flask import (
     Blueprint,
@@ -18,10 +18,11 @@ from flask import (
 
 from ..access import Permission
 from ..db import get_db
-from ..engine.insights import by_day, by_medication
+from ..engine.insights import by_day, by_medication, summarise, week_bars
 from ..repositories import profiles, records
 from ..services import alerts, care, reminders
 from ..services.mailer import mailer_from_config
+from ..timeutil import get_zone
 from . import forms
 from .security import allowed, current_member, current_profile, now, require
 
@@ -45,6 +46,8 @@ def index() -> str:
         "insights.html",
         report=care.care_weather_report(db, ctx, moment),
         days=by_day(week),
+        week=summarise(week),
+        bars=week_bars(week, today, care.WEEK_DAYS),
         per_medicine=by_medication(history),
         refills=care.refill_forecasts(ctx, today),
         pattern_days=care.PATTERN_DAYS,
@@ -141,8 +144,15 @@ def test_alert() -> Response:
 def history() -> str:
     db = get_db()
     profile = current_profile()
+    tz = get_zone(profile.timezone)
+    days: list[tuple[date, list[records.AuditEntry]]] = []
+    for entry in records.list_audit(db, profile.id):
+        day = entry.created_at.astimezone(tz).date()
+        if not days or days[-1][0] != day:
+            days.append((day, []))
+        days[-1][1].append(entry)
     return render_template(
         "history.html",
-        entries=records.list_audit(db, profile.id),
+        days=days,
         names=profiles.member_names(db, profile.id),
     )

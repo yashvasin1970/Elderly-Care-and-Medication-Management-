@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, textarea, error_summary %}
+{% from "macros.html" import csrf, textarea, error_summary, page_title %}
 {% block title %}Notes{% endblock %}
 
 {% block content %}
-<h1>Notes for the doctor</h1>
+{{ page_title('notebook', 'Notes for the doctor') }}
 <p class="lead">
   Questions for the doctor, how {{ 'you are' if may('decide_changes') else profile.elder_name ~ ' is' }} feeling,
   and notes from the circle. Everything here appears on the next visit summary.
@@ -16,12 +16,14 @@
   <fieldset{% if errors.get('kind') %} class="field-invalid" aria-describedby="kind-error"{% endif %}>
     <legend>What would you like to note?</legend>
     {% if errors.get('kind') %}<p class="error" id="kind-error"><strong>Please check:</strong> {{ errors['kind'] }}</p>{% endif %}
+    <div class="choice-tiles">
     {% for value, label in [('question', 'A question for the doctor'), ('symptom', 'A symptom or how I feel'), ('note', 'A general note')] %}
     <div class="check">
       <input type="radio" id="kind-{{ value }}" name="kind" value="{{ value }}"{% if values.get('kind', 'question') == value %} checked{% endif %}>
       <label for="kind-{{ value }}">{{ label }}</label>
     </div>
     {% endfor %}
+    </div>
   </fieldset>
   {{ textarea('body', 'Your note', values, errors, required=True, maxlength=1000, rows=4) }}
   <button type="submit" class="button button-primary">Save note</button>

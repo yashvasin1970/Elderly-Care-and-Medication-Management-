@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, field, checkbox, notes, describedby, error_summary %}
+{% from "macros.html" import csrf, field, checkbox, notes, describedby, error_summary, page_title %}
 {% block title %}Settings{% endblock %}
 
 {% block content %}
-<h1>Settings</h1>
+{{ page_title('settings', 'Settings') }}
 
 {{ error_summary(errors) }}
 

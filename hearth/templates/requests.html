@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf %}
+{% from "macros.html" import csrf, page_title %}
 {% block title %}Suggested changes{% endblock %}
 
 {% block content %}
-<h1>Suggested changes</h1>
+{{ page_title('suggest', 'Suggested changes') }}
 <p class="lead">
   {% if can_decide %}
   When someone suggests a change to your medicines, it waits here for you. Nothing changes unless you approve it.

@@ -115,8 +115,10 @@
         <strong>{{ profile.elder_name }}’s circle</strong>
         <span><time datetime="{{ moment | machine }}">{{ moment | day_and_time }}</time> (their time)</span>
       </p>
-      <p class="dash-who">Signed in as {{ member.name }} ({{ role_label | lower }})</p>
-      {{ sign_out_button() }}
+      <div class="dash-account">
+        <p class="dash-who">Signed in as {{ member.name }} ({{ role_label | lower }})</p>
+        {{ sign_out_button() }}
+      </div>
     </header>
     <main id="main" class="dash-content" tabindex="-1">
       {{ flashes() }}

@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from .models import DoseStatus
 from .schedule import part_of_day
@@ -101,6 +101,28 @@ def by_day(records: Sequence[DoseRecord]) -> dict[date, Adherence]:
     """Adherence for each day that had doses, oldest first."""
     days = sorted({record.scheduled_at.date() for record in records})
     return {day: summarise([r for r in records if r.scheduled_at.date() == day]) for day in days}
+
+
+@dataclass(frozen=True, slots=True)
+class DayBar:
+    """One day of the 7-day chart."""
+
+    day: date
+    adherence: Adherence
+    band: str
+    height: int  # percentage of the chart height, in steps of 5
+
+
+def week_bars(records: Sequence[DoseRecord], today: date, days: int = 7) -> list[DayBar]:
+    """One bar per day for the last ``days`` days, including days with no doses."""
+    bars = []
+    for offset in range(days - 1, -1, -1):
+        day = today - timedelta(days=offset)
+        adherence = summarise([r for r in records if r.scheduled_at.date() == day])
+        rate = adherence.rate
+        height = 0 if rate is None else round(rate / 5) * 5
+        bars.append(DayBar(day, adherence, band_for(rate), height))
+    return bars
 
 
 def band_for(rate: int | None) -> str:

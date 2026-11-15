@@ -2096,6 +2096,590 @@ html.layout-dashboard.size-larger {
   }
 }
 
+/* ---- Page titles, choice tiles and shared polish ---------------------- */
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.9rem;
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.dash-account {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-left: auto;
+}
+
+/* Radio choices shown as large tiles: easier to see and to tap. */
+.choice-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.choice-tiles .check {
+  height: 100%;
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border: 0.15rem solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.choice-tiles .check:hover {
+  border-color: var(--primary);
+}
+
+.choice-tiles .check:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  color: var(--text);
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.avatar-small {
+  width: 2.4rem;
+  height: 2.4rem;
+  font-size: 0.85rem;
+}
+
+.avatar-elder {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.avatar-caretaker {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.avatar-family {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+/* ---- Medicines -------------------------------------------------------- */
+
+.describe-card h2 {
+  font-size: 1.2rem;
+}
+
+.describe-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.describe-row input {
+  flex: 1 1 18rem;
+  max-width: none;
+}
+
+.med-grid,
+.people-grid,
+.visit-list,
+.mail-list {
+  margin: 0 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.med-grid,
+.people-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+  gap: 1.25rem;
+}
+
+.med-grid > li,
+.people-grid > li,
+.visit-list > li,
+.mail-list > li {
+  max-width: none;
+}
+
+.med-grid .card,
+.people-grid .card {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.med-head,
+.person-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-bottom: 0.85rem;
+}
+
+.med-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.med-title h2,
+.person-head h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.med-sub {
+  margin: 0;
+  color: var(--muted);
+}
+
+.pill-badge {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  background: var(--surface-soft);
+}
+
+.time-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  list-style: none;
+}
+
+.time-chips li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--info-bg);
+  color: var(--info);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.med-card .facts {
+  margin-bottom: 0.75rem;
+  font-size: 0.95rem;
+}
+
+.stock {
+  margin: auto 0 0.85rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+  font-size: 0.95rem;
+}
+
+.stock-low {
+  background: var(--bad-bg);
+}
+
+.stock .chip {
+  margin-left: 0.35rem;
+}
+
+.med-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding-top: 0.85rem;
+  border-top: var(--line-width) solid var(--line);
+}
+
+.med-actions form {
+  margin: 0;
+}
+
+/* ---- Doctor visits ---------------------------------------------------- */
+
+.visit-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+}
+
+.visit-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.visit-body h3 {
+  font-size: 1.3rem;
+}
+
+.date-tile {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  width: 4.75rem;
+  overflow: hidden;
+  border: 0.125rem solid var(--primary);
+  border-radius: 0.9rem;
+  background: var(--surface);
+  text-align: center;
+  line-height: 1.1;
+}
+
+.dt-month {
+  align-self: stretch;
+  padding: 0.2rem 0;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.dt-day {
+  padding-top: 0.25rem;
+  font-size: 1.9rem;
+  font-weight: 800;
+}
+
+.dt-week {
+  padding-bottom: 0.35rem;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.visit-when,
+.visit-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.visit-when {
+  font-weight: 700;
+}
+
+.visit-body .note-box {
+  margin: 0.6rem 0 0.9rem;
+}
+
+.past-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.past-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  max-width: none;
+  padding: 0.55rem 0;
+  border-bottom: var(--line-width) solid var(--line);
+}
+
+.past-list li:last-child {
+  border-bottom: 0;
+}
+
+.past-list time {
+  min-width: 7rem;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.past-list span {
+  flex: 1;
+}
+
+/* ---- Care Weather ----------------------------------------------------- */
+
+.insight {
+  padding: 0.85rem 0;
+  border-bottom: var(--line-width) solid var(--line);
+}
+
+.insight:last-child {
+  border-bottom: 0;
+}
+
+.insight p {
+  margin: 0;
+}
+
+.insight-message {
+  font-weight: 700;
+}
+
+.insight-idea {
+  margin-top: 0.3rem !important;
+  color: var(--muted);
+}
+
+.idea-tag {
+  display: inline-block;
+  margin-right: 0.3rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--info-bg);
+  color: var(--info);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.weather .weather-symbol {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  background: var(--surface-soft);
+  font-size: 2.6rem;
+}
+
+/* ---- Emails sent ------------------------------------------------------ */
+
+.mail-list > li + li {
+  margin-top: 0.6rem;
+}
+
+.mail {
+  border: var(--line-width) solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.mail > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 1rem;
+  list-style: none;
+}
+
+.mail > summary::-webkit-details-marker {
+  display: none;
+}
+
+.mail[open] > summary {
+  border-bottom: var(--line-width) solid var(--line);
+}
+
+.mail .email-body {
+  margin: 0.75rem 1rem 1rem;
+}
+
+.mail-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.75rem;
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.kind-missed,
+.kind-help {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.kind-refill,
+.kind-checkin,
+.kind-request {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+.kind-digest,
+.kind-appointment {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.mail-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.mail-status-failed {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.chevron {
+  flex: none;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-right: 0.15rem solid var(--muted);
+  border-bottom: 0.15rem solid var(--muted);
+  transform: rotate(45deg);
+}
+
+.mail[open] .chevron {
+  transform: rotate(-135deg);
+}
+
+@media (max-width: 40rem) {
+  /* Give the subject the full width; the status moves to its own line. */
+  .mail > summary {
+    flex-wrap: wrap;
+  }
+
+  .mail-main {
+    flex: 1 1 calc(100% - 4rem);
+  }
+
+  .mail > summary .chip {
+    margin-left: 3.6rem;
+  }
+
+  /* The percentage is written next to each bar, so the bar can go. */
+  td meter {
+    display: none;
+  }
+
+  th,
+  td {
+    padding-right: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* ---- History timeline ------------------------------------------------- */
+
+.history-day > h2 {
+  margin: 1.5rem 0 0.5rem;
+  font-size: 1.15rem;
+  color: var(--muted);
+}
+
+.timeline {
+  margin: 0;
+  padding: 0.25rem 1rem;
+  list-style: none;
+  background: var(--surface);
+  border: var(--line-width) solid var(--line);
+  border-radius: 1rem;
+}
+
+.timeline li {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  max-width: none;
+  padding: 0.7rem 0;
+  border-bottom: var(--line-width) solid var(--line);
+}
+
+.timeline li:last-child {
+  border-bottom: 0;
+}
+
+.timeline-body p {
+  margin: 0;
+}
+
+.timeline-what {
+  font-weight: 700;
+}
+
+.timeline-detail {
+  font-weight: 500;
+}
+
+.timeline-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---- Circle ----------------------------------------------------------- */
+
+.circle-code {
+  margin-bottom: 1.25rem;
+}
+
+.person-facts {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.person-facts li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.person-facts .icon {
+  margin-top: 0.15rem;
+}
+
+.person-card .button-row {
+  margin-top: auto;
+  padding-top: 0.85rem;
+  border-top: var(--line-width) solid var(--line);
+}
+
+.chip-role {
+  margin-top: 0.2rem;
+}
+
+.role-elder {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.role-caretaker {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.role-family {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
 /* ---- Small screens ---------------------------------------------------- */
 
 @media (max-width: 48rem) {

@@ -1,27 +1,29 @@
 {% extends "base.html" %}
+{% from "macros.html" import page_title, initials %}
 {% block title %}History{% endblock %}
 
 {% block content %}
-<h1>History</h1>
+{{ page_title('history', 'History') }}
 <p class="lead">Who did what, and when. Every sign-in, change and recorded dose is listed here.</p>
 
-{% if entries %}
-<table>
-  <caption class="visually-hidden">Activity in this circle, newest first</caption>
-  <thead>
-    <tr><th scope="col">When</th><th scope="col">Who</th><th scope="col">What</th><th scope="col">Details</th></tr>
-  </thead>
-  <tbody>
+{% if days %}
+{% for day, entries in days %}
+<section class="history-day" aria-labelledby="day-{{ loop.index }}">
+  <h2 id="day-{{ loop.index }}"><time datetime="{{ day | machine }}">{{ day | long_date }}</time></h2>
+  <ol class="timeline">
     {% for entry in entries %}
-    <tr>
-      <td><time datetime="{{ entry.created_at | machine }}">{{ entry.created_at | day_and_time }}</time></td>
-      <th scope="row">{{ names.get(entry.member_id, 'Hearth') }}</th>
-      <td>{{ entry.action }}</td>
-      <td>{{ entry.detail or '—' }}</td>
-    </tr>
+    {% set who = names.get(entry.member_id, 'Hearth') %}
+    <li>
+      <span class="avatar avatar-small" aria-hidden="true">{{ initials(who) }}</span>
+      <div class="timeline-body">
+        <p class="timeline-what">{{ entry.action }}{% if entry.detail %}: <span class="timeline-detail">{{ entry.detail }}</span>{% endif %}</p>
+        <p class="timeline-meta">{{ who }} · <time datetime="{{ entry.created_at | machine }}">{{ entry.created_at | clock }}</time></p>
+      </div>
+    </li>
     {% endfor %}
-  </tbody>
-</table>
+  </ol>
+</section>
+{% endfor %}
 {% else %}
 <p class="empty">Nothing has happened yet.</p>
 {% endif %}

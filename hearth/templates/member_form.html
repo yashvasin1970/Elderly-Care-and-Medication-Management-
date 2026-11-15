@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, field, checkbox, error_summary %}
+{% from "macros.html" import csrf, field, checkbox, error_summary, page_title %}
 {% block title %}{{ 'Change access' if editing else 'Invite someone' }}{% endblock %}
 
 {% block content %}
-<h1>{{ 'Change ' ~ editing.name ~ '’s access' if editing else 'Invite someone to your circle' }}</h1>
+{{ page_title('people', 'Change ' ~ editing.name ~ '’s access' if editing else 'Invite someone to your circle') }}
 
 {{ error_summary(errors) }}
 
@@ -17,6 +17,7 @@
   <fieldset{% if errors.get('role') %} class="field-invalid" aria-describedby="role-error"{% endif %}>
     <legend>What can they do?</legend>
     {% if errors.get('role') %}<p class="error" id="role-error"><strong>Please check:</strong> {{ errors['role'] }}</p>{% endif %}
+    <div class="choice-tiles">
     {% for role, label, description in roles %}
     <div class="check">
       <input type="radio" id="role-{{ role.value }}" name="role" value="{{ role.value }}"
@@ -25,6 +26,7 @@
       <p class="hint" id="role-{{ role.value }}-hint">{{ description }}</p>
     </div>
     {% endfor %}
+    </div>
   </fieldset>
 
   <fieldset>

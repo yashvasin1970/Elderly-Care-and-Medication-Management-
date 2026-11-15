@@ -1,5 +1,54 @@
 {# Shared building blocks. Every form control gets a visible label, and any
    hint or error is tied to it with aria-describedby for screen readers. #}
+{% from "icons.html" import icon %}
+
+{# A page heading with a small icon badge, used at the top of every page. #}
+{% macro page_title(symbol, text) -%}
+<h1 class="page-title"><span class="title-badge">{{ icon(symbol, 30) }}</span><span>{{ text }}</span></h1>
+{%- endmacro %}
+
+{# The 7-day adherence chart. Plain HTML bars, because the CSP blocks inline
+   styles; each bar's height is a class in steps of 5%. The full numbers are
+   read out to screen readers and listed in the Care Weather tables. #}
+{% macro week_chart(bars, week) -%}
+<section class="card" aria-labelledby="trend-heading">
+  <div class="card-head">
+    <div>
+      <h2 id="trend-heading">The last 7 days</h2>
+      <p class="muted">Share of each day’s doses that were taken</p>
+    </div>
+    {% if week.rate is not none %}<p class="pill-label">Average {{ week.rate }}%</p>{% endif %}
+  </div>
+  <ol class="bars" aria-label="Doses taken on each of the last 7 days">
+    {% for bar in bars %}
+    <li class="bar-col">
+      <span class="bar-value" aria-hidden="true">{{ '—' if bar.adherence.rate is none else bar.adherence.rate ~ '%' }}</span>
+      <span class="bar-track" aria-hidden="true"><span class="bar-fill band-{{ bar.band }} h-{{ bar.height }}"></span></span>
+      <span class="bar-day" aria-hidden="true">{{ 'Today' if loop.last else bar.day.strftime('%a') }}</span>
+      <span class="bar-tip" aria-hidden="true">
+        {% if bar.adherence.total %}{{ bar.adherence.taken }} of {{ bar.adherence.total }} taken{% if bar.adherence.missed %}, {{ bar.adherence.missed }} missed{% endif %}{% if bar.adherence.skipped %}, {{ bar.adherence.skipped }} skipped{% endif %}
+        {% else %}No doses were due{% endif %}
+      </span>
+      <span class="visually-hidden">
+        {{ bar.day | long_date }}:
+        {% if bar.adherence.total %}{{ bar.adherence.taken }} of {{ bar.adherence.total }} doses taken ({{ bar.adherence.rate }}%){% else %}no doses were due{% endif %}.
+      </span>
+    </li>
+    {% endfor %}
+  </ol>
+  <ul class="legend" aria-label="Colour key">
+    <li><span class="swatch band-good"></span>90% or more</li>
+    <li><span class="swatch band-fair"></span>75 to 89%</li>
+    <li><span class="swatch band-low"></span>Under 75%</li>
+  </ul>
+  {{ caller() if caller }}
+</section>
+{%- endmacro %}
+
+{% macro initials(name) -%}
+{%- set parts = name.replace('.', '').split() -%}
+{{- (parts[0][0] ~ (parts[-1][0] if parts | length > 1 else '')) | upper -}}
+{%- endmacro %}
 
 {% macro csrf() -%}
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

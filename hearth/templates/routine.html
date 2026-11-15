@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, error_summary %}
+{% from "macros.html" import csrf, error_summary, page_title %}
 {% block title %}Daily routine{% endblock %}
 
 {% block content %}
-<h1>Daily routine</h1>
+{{ page_title('clock', 'Daily routine') }}
 <p class="lead">
   Medicines are tied to moments in the day, like “after breakfast”. Set when those moments
   usually happen and every reminder tied to them moves along.

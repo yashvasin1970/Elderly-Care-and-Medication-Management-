@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, field, error_summary %}
+{% from "macros.html" import csrf, field, error_summary, page_title %}
 {% block title %}{{ 'Change a medicine' if medication_id else 'Add a medicine' }}{% endblock %}
 
 {% block content %}
-<h1>{{ 'Change a medicine' if medication_id else 'Add a medicine' }}</h1>
+{{ page_title('pill', 'Change a medicine' if medication_id else 'Add a medicine') }}
 
 {% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
 {% if needs_approval %}
@@ -70,6 +70,7 @@
     <legend>How important is it to take this on time?</legend>
     <p class="hint">This decides who is told if a dose is late. You are always reminded first.</p>
     {% if errors.get('criticality') %}<p class="error" id="criticality-error"><strong>Please check:</strong> {{ errors['criticality'] }}</p>{% endif %}
+    <div class="choice-tiles">
     {% for value, label, description in criticality_choices %}
     <div class="check">
       <input type="radio" id="criticality-{{ value }}" name="criticality" value="{{ value }}"
@@ -78,6 +79,7 @@
       <p class="hint" id="criticality-{{ value }}-hint">{{ description }}</p>
     </div>
     {% endfor %}
+    </div>
   </fieldset>
 
   {{ field('instructions', 'How to take it', values, errors, maxlength=200, hint='For example: with food, or with a full glass of water.') }}

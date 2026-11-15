@@ -9,10 +9,9 @@ import pytest
 
 from hearth.access import Role
 from hearth.db import get_db
-from hearth.engine.insights import DoseRecord, band_for
+from hearth.engine.insights import DoseRecord, band_for, week_bars
 from hearth.engine.models import DoseStatus
 from hearth.repositories import profiles, records
-from hearth.web.today import week_bars
 
 from .conftest import START, Browser, add_medicine, medicine
 from .factories import local
@@ -33,7 +32,7 @@ def test_the_caretaker_gets_the_dashboard(app, as_role, circle):
     add_medicine(app, circle, medicine(), when=START - timedelta(days=2))
     page = as_role(Role.CARETAKER).get("/today").get_data(as_text=True)
     assert "layout-dashboard" in page
-    assert "<h1>Caretaker dashboard</h1>" in page
+    assert "<span>Caretaker dashboard</span></h1>" in page
     assert "Taken this week" in page and "Missed or late today" in page
     assert 'aria-label="Doses taken on each of the last 7 days"' in page
     assert "Mark taken" in page
@@ -43,7 +42,7 @@ def test_the_caretaker_gets_the_dashboard(app, as_role, circle):
 def test_family_get_an_overview_without_dose_buttons(app, as_role, circle):
     add_medicine(app, circle, medicine(), when=START - timedelta(days=2))
     page = as_role(Role.FAMILY).get("/today").get_data(as_text=True)
-    assert "<h1>Family overview</h1>" in page
+    assert "<span>Family overview</span></h1>" in page
     assert "How Kamala is doing" in page
     assert not re.search(r"/doses/\d+/[\d-]+/take", page)
     assert "Doses are recorded by Kamala or a caretaker" in page
@@ -193,4 +192,4 @@ def test_demo_sign_in_offers_each_view(tmp_path, clock):
     for view in ("Senior view", "Caretaker dashboard", "Family overview", "Read-only view"):
         assert view in page
     assert browser.sign_in("caring-1357", code="DEMO-2026").status_code == 302
-    assert "<h1>Caretaker dashboard</h1>" in browser.get("/today").get_data(as_text=True)
+    assert "<span>Caretaker dashboard</span></h1>" in browser.get("/today").get_data(as_text=True)

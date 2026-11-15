@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% from "macros.html" import csrf, field, textarea, error_summary %}
+{% from "macros.html" import csrf, field, textarea, error_summary, page_title %}
 {% block title %}{{ 'Change an appointment' if appointment else 'Add an appointment' }}{% endblock %}
 
 {% block content %}
-<h1>{{ 'Change an appointment' if appointment else 'Add an appointment' }}</h1>
+{{ page_title('calendar', 'Change a doctor visit' if appointment else 'Add a doctor visit') }}
 
 {{ error_summary(errors) }}
 

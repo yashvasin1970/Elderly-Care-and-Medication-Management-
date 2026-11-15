@@ -28,7 +28,7 @@ from flask import (
 
 from ..access import Permission, Role
 from ..db import get_db
-from ..engine.insights import Adherence, DoseRecord, band_for, summarise
+from ..engine.insights import summarise, week_bars
 from ..engine.models import DoseStatus
 from ..engine.schedule import PARTS_OF_DAY, part_of_day
 from ..repositories import appointments, medications, profiles, records
@@ -65,16 +65,6 @@ class DayPart:
     key: str
     label: str
     doses: list[DoseView]
-
-
-@dataclass(frozen=True, slots=True)
-class DayBar:
-    """One bar of the 7-day chart."""
-
-    day: date
-    adherence: Adherence
-    band: str
-    height: int  # percentage of the chart height, in steps of 5
 
 
 @bp.get("/today")
@@ -146,7 +136,7 @@ def _dashboard(db: sqlite3.Connection, ctx: CareContext, role: Role, moment: dat
         late=sum(1 for status in statuses if status in _OPEN),
         upcoming=upcoming,
         week=summarise(week),
-        bars=week_bars(week, today),
+        bars=week_bars(week, today, _CHART_DAYS),
         report=care.care_weather_report(db, ctx, moment),
         suggestions=care.rhythm_suggestions(db, ctx, moment),
         next_visit=next_visit,
@@ -255,18 +245,6 @@ def group_by_part_of_day(views: Sequence[DoseView]) -> list[DayPart]:
     return [
         DayPart(name, name.capitalize(), groups[name]) for name, _ in PARTS_OF_DAY if groups[name]
     ]
-
-
-def week_bars(records_: Sequence[DoseRecord], today: date, days: int = _CHART_DAYS) -> list[DayBar]:
-    """One bar per day for the last ``days`` days, including days with no doses."""
-    bars = []
-    for offset in range(days - 1, -1, -1):
-        day = today - timedelta(days=offset)
-        adherence = summarise([r for r in records_ if r.scheduled_at.date() == day])
-        rate = adherence.rate
-        height = 0 if rate is None else round(rate / 5) * 5
-        bars.append(DayBar(day, adherence, band_for(rate), height))
-    return bars
 
 
 def spoken_summary(
