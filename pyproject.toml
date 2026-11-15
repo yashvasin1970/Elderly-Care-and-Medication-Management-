@@ -5,7 +5,7 @@ description = "Hearth: an elder-led care circle for medications, appointments an
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "Flask>=3.1,<4",
+    "Flask>=3.1.3,<4",
     "Werkzeug>=3.0.6,<4",
     "Jinja2>=3.1.6,<4",
     "python-dotenv>=1.0",
