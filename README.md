@@ -6,6 +6,10 @@ Hearth starts from the opposite end: **the elder owns the circle**. They decide 
 person can do, and whether any change to their medicines goes ahead.
 
 > **Challenge vertical:** Elderly Care & Medication Management Platform (PromptWars × Catalyst)
+>
+> **Live demo:** <https://hearth-demo.onrender.com>. Pick a person on the sign-in page to see their
+> view. It runs on Render's free plan, so the first visit after a quiet spell can take up to a
+> minute to wake up.
 
 | | |
 |---|---|
