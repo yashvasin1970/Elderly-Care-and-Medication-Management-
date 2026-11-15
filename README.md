@@ -241,7 +241,18 @@ All settings are listed in [`.env.example`](.env.example). The main ones:
 | `GEMINI_API_KEY` | Enable Gemini for "fill in the form from a sentence". |
 | `HEARTH_TASK_TOKEN` | Allow an external scheduler to call `POST /tasks/reminders`. |
 
-## 6. Deploy on Google Cloud
+## 6. Deploy
+
+### Render (free, used for the live demo)
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/yashvasin1970/Elderly-Care-and-Medication-Management-)
+
+[`render.yaml`](render.yaml) describes a free web service running the demo. Render generates the
+secret key itself and gives the app its public address for email links. The free plan's disk is
+temporary, so after a restart the example circle is simply loaded again. The first visit after a
+quiet spell can take up to a minute while the service wakes up.
+
+### Google Cloud Run
 
 The included [`Dockerfile`](Dockerfile) runs Hearth with gunicorn as a non-root user.
 

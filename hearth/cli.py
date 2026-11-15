@@ -22,7 +22,9 @@ def register(app: Flask) -> None:
     def seed_demo() -> None:
         """Load the example care circle (only if it is not already there)."""
         config = current_app.config
-        created = demo.seed_if_missing(get_db(), config["CLOCK"](), config["PASSCODE_HASH_METHOD"])
+        created = demo.seed_if_missing(
+            get_db(), config["CLOCK"](), config["PASSCODE_HASH_METHOD"], config["PUBLIC_BASE_URL"]
+        )
         code = format_circle_code(demo.DEMO_CIRCLE_CODE)
         if created:
             click.echo(f"Demo circle created. Circle code: {code}")

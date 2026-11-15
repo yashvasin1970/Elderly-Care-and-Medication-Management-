@@ -1,0 +1,25 @@
+# Render blueprint: a free, public demo of Hearth with the example circle.
+# Deploy from the Render dashboard (New > Blueprint) or with the README's button.
+#
+# The free plan's disk is temporary, so each restart starts a fresh demo:
+# the example circle is reloaded automatically because HEARTH_DEMO_MODE is on.
+services:
+  - type: web
+    name: hearth-demo
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    # One worker keeps SQLite simple; threads handle concurrent visitors.
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 60 "hearth:create_app()"
+    healthCheckPath: /healthz
+    envVars:
+      - key: HEARTH_SECRET_KEY
+        generateValue: true # Render creates a random secret; it never lives in the repo
+      - key: HEARTH_DEMO_MODE
+        value: "1"
+      - key: HEARTH_RUN_SCHEDULER
+        value: "1"
+      - key: HEARTH_SECURE_COOKIES
+        value: "1"
+      - key: HEARTH_TRUST_PROXY
+        value: "1"

@@ -68,23 +68,27 @@ _LAST_VISIT_DAYS_AGO = 9
 _EVERY_DAY = "1111111"
 
 
-def seed_if_empty(db: sqlite3.Connection, now: datetime, hash_method: str) -> bool:
+def seed_if_empty(
+    db: sqlite3.Connection, now: datetime, hash_method: str, base_url: str = DEMO_BASE_URL
+) -> bool:
     """Create the demo circle when the database has no circles at all."""
     if profiles.count_profiles(db) > 0:
         return False
-    _seed(db, now, hash_method)
+    _seed(db, now, hash_method, base_url)
     return True
 
 
-def seed_if_missing(db: sqlite3.Connection, now: datetime, hash_method: str) -> bool:
+def seed_if_missing(
+    db: sqlite3.Connection, now: datetime, hash_method: str, base_url: str = DEMO_BASE_URL
+) -> bool:
     """Create the demo circle unless it already exists."""
     if profiles.get_profile_by_code(db, DEMO_CIRCLE_CODE) is not None:
         return False
-    _seed(db, now, hash_method)
+    _seed(db, now, hash_method, base_url)
     return True
 
 
-def _seed(db: sqlite3.Connection, now: datetime, hash_method: str) -> None:
+def _seed(db: sqlite3.Connection, now: datetime, hash_method: str, base_url: str) -> None:
     started = now - timedelta(days=_HISTORY_DAYS)
     with transaction(db):
         profile_id = profiles.create_profile(
@@ -106,7 +110,7 @@ def _seed(db: sqlite3.Connection, now: datetime, hash_method: str) -> None:
         _add_pending_request(db, profile_id, people, now)
 
     # Replay the last day so the Outbox fills with what really would have gone out.
-    _replay(db, profile_id, recent, now)
+    _replay(db, profile_id, recent, now, base_url)
 
 
 def _add_people(
@@ -409,7 +413,9 @@ def _add_pending_request(
 # --- replaying the last day ----------------------------------------------
 
 
-def _replay(db: sqlite3.Connection, profile_id: int, recent: list[_Log], now: datetime) -> None:
+def _replay(
+    db: sqlite3.Connection, profile_id: int, recent: list[_Log], now: datetime, base_url: str
+) -> None:
     """Step through the last day, logging doses and running reminders in order."""
     profile = profiles.get_profile(db, profile_id)
     if profile is None:  # pragma: no cover - the profile was created just above
@@ -430,16 +436,16 @@ def _replay(db: sqlite3.Connection, profile_id: int, recent: list[_Log], now: da
     if sunday_evening > local_now:
         sunday_evening -= timedelta(days=7)
     if sunday_evening < moment:
-        reminders.run_profile(db, None, profile, sunday_evening, DEMO_BASE_URL)
+        reminders.run_profile(db, None, profile, sunday_evening, base_url)
 
     pending = list(recent)
     while moment <= now:
         with transaction(db):
             while pending and pending[0][2] <= moment:
                 _save(db, profile_id, pending.pop(0))
-            reminders.run_profile(db, None, profile, moment, DEMO_BASE_URL)
+            reminders.run_profile(db, None, profile, moment, base_url)
         moment += _REPLAY_STEP
     with transaction(db):
         for entry in pending:
             _save(db, profile_id, entry)
-        reminders.run_profile(db, None, profile, now, DEMO_BASE_URL)
+        reminders.run_profile(db, None, profile, now, base_url)

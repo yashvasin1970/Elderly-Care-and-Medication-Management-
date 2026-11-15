@@ -37,7 +37,12 @@ def load_config() -> dict[str, Any]:
         "SECRET_KEY": secret_key or secrets.token_hex(32),
         "SECRET_KEY_IS_TEMPORARY": secret_key is None,
         "DATABASE": os.environ.get("HEARTH_DATABASE"),
-        "PUBLIC_BASE_URL": os.environ.get("HEARTH_BASE_URL", "http://localhost:5000"),
+        # Used for links inside emails. Render sets RENDER_EXTERNAL_URL automatically.
+        "PUBLIC_BASE_URL": (
+            os.environ.get("HEARTH_BASE_URL")
+            or os.environ.get("RENDER_EXTERNAL_URL")
+            or "http://localhost:5000"
+        ),
         # Cookies: never readable by scripts, never sent cross-site.
         "SESSION_COOKIE_NAME": "hearth_session",
         "SESSION_COOKIE_HTTPONLY": True,

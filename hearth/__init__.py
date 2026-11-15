@@ -45,7 +45,10 @@ def create_app(overrides: Mapping[str, Any] | None = None) -> Flask:
     if app.config["DEMO_MODE"]:
         with app.app_context():
             demo.seed_if_empty(
-                db.get_db(), app.config["CLOCK"](), app.config["PASSCODE_HASH_METHOD"]
+                db.get_db(),
+                app.config["CLOCK"](),
+                app.config["PASSCODE_HASH_METHOD"],
+                app.config["PUBLIC_BASE_URL"],
             )
     if app.config["SECRET_KEY_IS_TEMPORARY"] and not app.testing:
         app.logger.warning(
