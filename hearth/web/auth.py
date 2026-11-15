@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime
 
 from flask import (
     Blueprint,
     Response,
     current_app,
+    flash,
     g,
     redirect,
     render_template,
@@ -18,8 +20,9 @@ from flask import (
 from ..access import Role
 from ..db import get_db, transaction
 from ..repositories import profiles, records
-from ..repositories.profiles import Member
-from ..services import demo, passcodes, throttle
+from ..repositories.profiles import Member, Profile
+from ..services import alerts, demo, passcodes, throttle
+from ..services.mailer import mailer_from_config
 from ..timeutil import is_valid_zone, timezone_names
 from . import forms, security
 from .security import now
@@ -72,10 +75,15 @@ def sign_in() -> Response | tuple[str, int]:
     if any(throttle.locked_until(db, bucket, moment) for bucket in buckets):
         return _sign_in_error(_LOCKED, code, 429)
 
-    member = _authenticate(db, code, passcode)
+    profile = profiles.get_profile_by_code(db, code) if code else None
+    member = _authenticate(db, profile, passcode)
     if member is None:
+        circle_locked = False
         for bucket, rule in buckets.items():
-            throttle.record_attempt(db, bucket, rule, moment)
+            locked = throttle.record_attempt(db, bucket, rule, moment)
+            circle_locked = circle_locked or (locked and not bucket.startswith("sign-in:address:"))
+        if profile is not None:
+            _record_failed_sign_in(db, profile, circle_locked, moment)
         # One message for every failure, so it never reveals which part was wrong.
         return _sign_in_error(_SIGN_IN_FAILED, code, 401)
 
@@ -89,14 +97,41 @@ def sign_in() -> Response | tuple[str, int]:
     return redirect(url_for("today.show"))
 
 
-def _authenticate(db: sqlite3.Connection, code: str, passcode: str) -> Member | None:
+def _authenticate(db: sqlite3.Connection, profile: Profile | None, passcode: str) -> Member | None:
     method = current_app.config["PASSCODE_HASH_METHOD"]
-    profile = profiles.get_profile_by_code(db, code) if code else None
     if profile is None:
         passcodes.burn_verification_time(passcode, method)
         return None
     member_id = passcodes.find_member_id(db, profile.id, passcode)
     return profiles.get_member(db, profile.id, member_id) if member_id is not None else None
+
+
+def _record_failed_sign_in(
+    db: sqlite3.Connection, profile: Profile, locked: bool, moment: datetime
+) -> None:
+    """Make wrong passcodes visible to the circle, and warn the elder of a lockout."""
+    records.add_audit(
+        db,
+        profile_id=profile.id,
+        member_id=None,
+        action="Someone tried a wrong passcode",
+        now=moment,
+    )
+    if not locked:
+        return
+    records.add_audit(
+        db,
+        profile_id=profile.id,
+        member_id=None,
+        action="Sign-in paused for 15 minutes after repeated wrong passcodes",
+        now=moment,
+    )
+    # No circle code or address in the log: the History page has the details.
+    current_app.logger.warning("Sign-in paused for a circle after repeated wrong passcodes.")
+    config = current_app.config
+    alerts.warn_about_sign_in_attempts(
+        db, mailer_from_config(config), profile, moment, config["PUBLIC_BASE_URL"]
+    )
 
 
 def _sign_in_error(message: str, code: str, status: int) -> tuple[str, int]:
@@ -106,6 +141,25 @@ def _sign_in_error(message: str, code: str, status: int) -> tuple[str, int]:
 @bp.post("/sign-out")
 def sign_out() -> Response:
     security.sign_out()
+    return redirect(url_for("auth.home"))
+
+
+@bp.post("/sign-out-everywhere")
+def sign_out_everywhere() -> Response:
+    """End every session this member has, on any device (say, a lost phone)."""
+    member: Member | None = g.get("member")
+    if member is not None:
+        db = get_db()
+        profiles.end_sessions(db, member.profile_id, member.id)
+        records.add_audit(
+            db,
+            profile_id=member.profile_id,
+            member_id=member.id,
+            action="Signed out on all devices",
+            now=now(),
+        )
+        security.sign_out()
+        flash("You have been signed out on every device.", "success")
     return redirect(url_for("auth.home"))
 
 
@@ -130,7 +184,7 @@ def start() -> Response | str | tuple[str, int]:
     if not is_valid_zone(timezone):
         errors["timezone"] = "Choose a timezone from the list."
     passcode = form.get("passcode", "")
-    problem = passcodes.passcode_problem(passcode)
+    problem = passcodes.passcode_problem(passcode, avoid=(elder_name,))
     if problem:
         errors["passcode"] = problem
     elif passcode != form.get("passcode_again", ""):

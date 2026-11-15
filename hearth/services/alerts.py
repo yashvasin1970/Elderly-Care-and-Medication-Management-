@@ -66,6 +66,31 @@ def ask_for_help(
     return told
 
 
+def warn_about_sign_in_attempts(
+    db: sqlite3.Connection, mailer: Mailer | None, profile: Profile, now: datetime, base_url: str
+) -> int:
+    """Tell the elder that sign-in was paused after repeated wrong passcodes.
+
+    At most one warning an hour, however many attempts there are.
+    """
+    audience = Audience.from_members(profiles.list_members(db, profile.id))
+    local = care.load_context(db, profile).local(now)
+    link = f"{base_url.rstrip('/')}/circle"
+    return sum(
+        deliver(
+            db,
+            mailer,
+            profile_id=profile.id,
+            dedupe_key=f"p{profile.id}:security:{local:%Y%m%d%H}",
+            recipient=member.email,
+            kind="security",
+            **_fields(messages.sign_in_attempts(member.name, link)),
+            now=now,
+        )
+        for member in audience.elder
+    )
+
+
 def recent_help_request(db: sqlite3.Connection, profile_id: int, now: datetime) -> datetime | None:
     """When the elder last asked for help, if it was within the last few hours."""
     return records.latest_notification_time(db, profile_id, "help", since=now - HELP_SHOWN_FOR)

@@ -2516,7 +2516,8 @@ html.layout-dashboard.size-larger {
 }
 
 .kind-missed,
-.kind-help {
+.kind-help,
+.kind-security {
   background: var(--bad-bg);
   color: var(--bad);
 }

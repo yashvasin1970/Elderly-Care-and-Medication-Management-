@@ -31,6 +31,7 @@ def _number(name: str, default: int) -> int:
 def load_config() -> dict[str, Any]:
     """Build the Flask configuration from the environment."""
     secret_key = os.environ.get("HEARTH_SECRET_KEY")
+    secure_cookies = _flag("HEARTH_SECURE_COOKIES")
     return {
         # Sessions are signed with this key. Without one we generate a random
         # key per start, which is safe but signs everyone out on restart.
@@ -43,14 +44,18 @@ def load_config() -> dict[str, Any]:
             or os.environ.get("RENDER_EXTERNAL_URL")
             or "http://localhost:5000"
         ),
-        # Cookies: never readable by scripts, never sent cross-site.
-        "SESSION_COOKIE_NAME": "hearth_session",
+        # Cookies: never readable by scripts, never sent cross-site. Over HTTPS
+        # the "__Host-" prefix also stops any other site or subdomain from
+        # planting or overwriting the session cookie.
+        "SESSION_COOKIE_NAME": "__Host-hearth_session" if secure_cookies else "hearth_session",
         "SESSION_COOKIE_HTTPONLY": True,
         "SESSION_COOKIE_SAMESITE": "Lax",
-        "SESSION_COOKIE_SECURE": _flag("HEARTH_SECURE_COOKIES"),
+        "SESSION_COOKIE_SECURE": secure_cookies,
         # Set when running behind exactly one trusted proxy or load balancer.
         "TRUST_PROXY": _flag("HEARTH_TRUST_PROXY"),
+        # A sign-in lasts at most this long, and ends sooner if left unused.
         "PERMANENT_SESSION_LIFETIME": timedelta(hours=_number("HEARTH_SESSION_HOURS", 72)),
+        "SESSION_IDLE_TIMEOUT": timedelta(hours=_number("HEARTH_IDLE_HOURS", 12)),
         # Forms are small; refuse anything larger outright.
         "MAX_CONTENT_LENGTH": 64 * 1024,
         "PASSCODE_HASH_METHOD": DEFAULT_HASH_METHOD,

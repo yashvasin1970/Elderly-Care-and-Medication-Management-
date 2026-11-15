@@ -48,6 +48,16 @@
       {% endif %}
     </ul>
 
+    {% if person.id == member.id %}
+    <div class="button-row">
+      <form method="post" action="{{ url_for('auth.sign_out_everywhere') }}"
+            data-confirm="Sign out on every phone, tablet and computer, including this one?">
+        {{ csrf() }}
+        <button type="submit" class="button button-quiet button-small">{{ icon('history', 20) }}<span>Sign me out on all devices</span></button>
+      </form>
+    </div>
+    {% endif %}
+
     {% if can_manage and person.role.value != 'elder' %}
     <div class="button-row">
       <a class="button button-secondary button-small" href="{{ url_for('circle.edit', member_id=person.id) }}">Change<span class="visually-hidden"> {{ person.name }}’s access</span></a>

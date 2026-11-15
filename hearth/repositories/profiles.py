@@ -217,6 +217,14 @@ def set_passcode(
     )
 
 
+def end_sessions(db: sqlite3.Connection, profile_id: int, member_id: int) -> None:
+    """Sign a member out on every device by invalidating their sessions."""
+    db.execute(
+        "UPDATE members SET session_version = session_version + 1 WHERE id = ? AND profile_id = ?",
+        (member_id, profile_id),
+    )
+
+
 def deactivate_member(db: sqlite3.Connection, profile_id: int, member_id: int) -> None:
     """Remove a member from the circle; their open sessions stop working at once."""
     db.execute(

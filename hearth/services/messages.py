@@ -53,6 +53,20 @@ def help_request(recipient: str, elder: str, asked_at: datetime, link: str) -> M
     )
 
 
+def sign_in_attempts(recipient: str, link: str) -> Message:
+    return Message(
+        "Several wrong passcodes were tried for your Hearth circle",
+        _compose(
+            f"Hello {recipient},",
+            "Someone tried several wrong passcodes to sign in to your circle. To keep it safe,"
+            " signing in has been paused for 15 minutes.",
+            "If that was you or someone in your circle mistyping, there is nothing to do."
+            " If not, you can give people new passcodes from your Circle page, and the"
+            f" History page shows each attempt: {link}",
+        ),
+    )
+
+
 def as_test(message: Message) -> Message:
     """Mark a message sent from the demo's test buttons, so nobody mistakes it."""
     return Message(

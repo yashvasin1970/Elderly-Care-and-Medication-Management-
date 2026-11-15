@@ -54,7 +54,7 @@ _DASHBOARD_TITLES = {
     Role.VIEWER: "Overview",
 }
 #: Alerts worth showing on a dashboard (reminders to the elder are left out).
-_ALERT_KINDS = ("help", "missed", "checkin", "refill", "appointment", "test")
+_ALERT_KINDS = ("help", "security", "missed", "checkin", "refill", "appointment", "test")
 _CHART_DAYS = 7
 
 

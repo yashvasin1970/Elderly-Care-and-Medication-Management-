@@ -70,7 +70,7 @@ def test_creating_a_circle_explains_every_problem(browser: Browser):
     assert "Enter the name of the person" in page
     assert "email address does not look right" in page
     assert "Choose a timezone" in page
-    assert "at least 6 characters" in page
+    assert "at least 8 characters" in page
 
 
 # --- medicines and the elder's consent -----------------------------------

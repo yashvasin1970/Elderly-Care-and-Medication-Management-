@@ -9,7 +9,18 @@ from datetime import datetime
 from functools import wraps
 from typing import Any, TypeVar
 
-from flask import Flask, Response, abort, current_app, g, redirect, request, session, url_for
+from flask import (
+    Flask,
+    Response,
+    abort,
+    current_app,
+    flash,
+    g,
+    redirect,
+    request,
+    session,
+    url_for,
+)
 
 from ..access import Permission, can
 from ..db import get_db
@@ -20,23 +31,29 @@ _MEMBER = "member_id"
 _PROFILE = "profile_id"
 _VERSION = "session_version"
 _CSRF = "csrf_token"
+_STARTED = "started_at"  # when this sign-in began (seconds since the epoch)
+_SEEN = "seen_at"  # when this session was last used
+#: Only rewrite the "last used" time once a minute, not on every request.
+_SEEN_RESOLUTION = 60
 
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 #: Endpoints that authenticate with a bearer token instead of a session cookie.
 _CSRF_EXEMPT = frozenset({"tasks.run_reminders"})
 
-_CONTENT_SECURITY_POLICY = "; ".join(
-    [
-        "default-src 'self'",
-        "script-src 'self'",
-        "style-src 'self'",
-        "img-src 'self' data:",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "form-action 'self'",
-        "frame-ancestors 'none'",
-    ]
+_CSP_DIRECTIVES = (
+    "default-src 'self'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "object-src 'none'",
+    "base-uri 'none'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
 )
+_CONTENT_SECURITY_POLICY = "; ".join(_CSP_DIRECTIVES)
+#: Over HTTPS, also upgrade any stray http:// request instead of sending it in clear.
+_CONTENT_SECURITY_POLICY_HTTPS = "; ".join((*_CSP_DIRECTIVES, "upgrade-insecure-requests"))
+_ONE_YEAR = 365 * 24 * 60 * 60
 
 View = TypeVar("View", bound=Callable[..., Any])
 
@@ -73,12 +90,19 @@ def _check_csrf() -> None:
 
 
 def sign_in(member: Member) -> None:
-    """Start a fresh session for a member (discarding any earlier one)."""
+    """Start a fresh session for a member (discarding any earlier one).
+
+    Clearing first means a session identifier planted before sign-in can
+    never become a signed-in session (session fixation).
+    """
+    stamp = int(now().timestamp())
     session.clear()
     session.permanent = True
     session[_MEMBER] = member.id
     session[_PROFILE] = member.profile_id
     session[_VERSION] = member.session_version
+    session[_STARTED] = stamp
+    session[_SEEN] = stamp
 
 
 def sign_out() -> None:
@@ -98,6 +122,10 @@ def _load_member() -> None:
     member_id, profile_id = session.get(_MEMBER), session.get(_PROFILE)
     if member_id is None or profile_id is None:
         return
+    if _session_expired():
+        session.clear()
+        flash("You were signed out to keep your circle safe. Please sign in again.", "info")
+        return
     db = get_db()
     member = profiles.get_member(db, profile_id, member_id)
     profile = profiles.get_profile(db, profile_id)
@@ -106,6 +134,25 @@ def _load_member() -> None:
         return
     g.member = member
     g.profile = profile
+    stamp = int(now().timestamp())
+    if stamp - session.get(_SEEN, 0) >= _SEEN_RESOLUTION:
+        session[_SEEN] = stamp
+
+
+def _session_expired() -> bool:
+    """Has this session been idle too long, or open too long altogether?
+
+    The cookie's own expiry slides forward on every visit, so these checks are
+    what really bound a session, even if its cookie were copied.
+    """
+    config = current_app.config
+    stamp = now().timestamp()
+    started, seen = session.get(_STARTED), session.get(_SEEN)
+    if not isinstance(started, int) or not isinstance(seen, int):
+        return True  # a session from before these checks existed
+    too_long = stamp - started > config["PERMANENT_SESSION_LIFETIME"].total_seconds()
+    idle = stamp - seen > config["SESSION_IDLE_TIMEOUT"].total_seconds()
+    return too_long or idle
 
 
 def current_member() -> Member:
@@ -150,11 +197,20 @@ def require(permission: Permission) -> Callable[[View], View]:
 
 def _add_security_headers(response: Response) -> Response:
     headers = response.headers
-    headers.setdefault("Content-Security-Policy", _CONTENT_SECURITY_POLICY)
+    https = current_app.config["SESSION_COOKIE_SECURE"]
+    csp = _CONTENT_SECURITY_POLICY_HTTPS if https else _CONTENT_SECURITY_POLICY
+    headers.setdefault("Content-Security-Policy", csp)
     headers.setdefault("X-Content-Type-Options", "nosniff")
     headers.setdefault("X-Frame-Options", "DENY")
     headers.setdefault("Referrer-Policy", "same-origin")
-    headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+    headers.setdefault("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()")
+    # Keep other sites' windows and pages from reaching into Hearth's.
+    headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+    headers.setdefault("Cross-Origin-Resource-Policy", "same-origin")
+    headers.setdefault("X-Permitted-Cross-Domain-Policies", "none")
+    if https:
+        # Browsers remember to use HTTPS only, even if someone types http://.
+        headers.setdefault("Strict-Transport-Security", f"max-age={_ONE_YEAR}; includeSubDomains")
     if request.endpoint != "static":
         # Health information must not linger in shared or proxy caches.
         headers.setdefault("Cache-Control", "no-store")

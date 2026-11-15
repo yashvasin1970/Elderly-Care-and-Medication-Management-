@@ -14,8 +14,8 @@ person can do, and whether any change to their medicines goes ahead.
 | | |
 |---|---|
 | Stack | Python 3.11+, Flask, SQLite, server-rendered HTML, a small amount of plain JavaScript |
-| Runtime dependencies | 3 (Flask, python-dotenv, tzdata), plus gunicorn in the container |
-| Tests | 204 automated tests (`pytest`), lint and format checks (`ruff`), GitHub Actions CI |
+| Runtime dependencies | 3 (Flask, python-dotenv, tzdata), plus gunicorn in the container; scanned with `pip-audit` in CI |
+| Tests | 230 automated tests (`pytest`), lint and format checks (`ruff`), GitHub Actions CI |
 | Google services | Gemini (optional, fills in a medicine from a sentence), Cloud Run + Cloud Scheduler deployment |
 
 ---
@@ -277,17 +277,23 @@ gcloud scheduler jobs create http hearth-reminders --schedule "* * * * *" \
 
 ## 7. Security
 
+The full threat model, and how to report a problem, are in [`SECURITY.md`](SECURITY.md).
+
 | Risk | What Hearth does |
 |---|---|
 | Stolen database | Passcodes are stored only as salted **scrypt** hashes; nothing secret is in the repo (`.env` is git-ignored) |
+| Weak passcodes | At least 8 characters, and common passcodes, simple patterns (`11111111`, `abcdefgh`, `121212…`) and the person's own name are refused |
 | Passcode guessing | Sign-in locks for 15 minutes after 5 failures per visitor per circle (also capped at 25 per circle and 20 per address); counters are kept in the database |
+| Guessing going unnoticed | Every wrong passcode appears in the circle's History; the elder is emailed (at most hourly) when sign-in is paused |
 | Finding out which circle codes exist | One message for every failure, plus a decoy hash check when the circle code is unknown, so both cases take the same time |
 | One circle reading another's data | Every query is filtered by the signed-in circle; IDs from another circle return 404 (tested) |
 | Doing more than your role allows | Central role-to-permission table (`access.py`); every page and action checks it; the elder cannot be removed |
 | Cross-site request forgery | A per-session token on every form, compared in constant time |
 | Cross-site scripting | Jinja auto-escaping, plus a strict Content-Security-Policy (`script-src 'self'`, no inline scripts) |
-| Session theft or misuse | `HttpOnly`, `SameSite=Lax` and (in production) `Secure` cookies; a new session on sign-in; removal or a new passcode ends sessions at once |
+| Session theft or misuse | `HttpOnly`, `SameSite=Lax` cookies, and over HTTPS `Secure` with the `__Host-` prefix; a new session on sign-in; sessions end after 12 hours unused or 3 days in total; removal, a new passcode or **Sign me out on all devices** ends sessions at once |
 | Clickjacking, sniffing, caching | `frame-ancestors 'none'`, `X-Frame-Options`, `nosniff`, `Referrer-Policy`, `Cache-Control: no-store` on pages |
+| Cross-origin attacks and HTTP downgrade | `Cross-Origin-Opener-Policy` and `Cross-Origin-Resource-Policy: same-origin`; over HTTPS, `Strict-Transport-Security` and `upgrade-insecure-requests` |
+| Vulnerable dependencies | Minimum versions include known fixes; `pip-audit` in CI; Dependabot updates weekly; Ruff's Bandit rules on every push |
 | Open redirects | Redirect targets are limited to paths on the same site |
 | Oversized or malformed input | 64 KB request limit; every field validated and length-capped server-side |
 | AI misuse | Gemini receives only the typed sentence, with the key sent in a header; output is schema-validated and only pre-fills a form; calls are rate-limited per member |
@@ -335,7 +341,7 @@ Designed for older eyes and hands, aiming for **WCAG 2.2 AA**:
 
 ## 10. Testing
 
-204 tests run in a few seconds, each against a fresh database and a clock pinned to a known moment:
+230 tests run in a few seconds, each against a fresh database and a clock pinned to a known moment:
 
 | File | Covers |
 |---|---|
@@ -347,6 +353,7 @@ Designed for older eyes and hands, aiming for **WCAG 2.2 AA**:
 | `test_security.py` | Sign-in, lockout, hashing, CSRF, role permissions, isolation between circles, escaping, headers, cookies |
 | `test_web.py` | End-to-end page flows for every role, including the approval flow, doses, appointments and the demo |
 | `test_views.py` | The right view for each person, the 7-day chart, the **I need help** alert, and the demo-only test tools |
+| `test_hardening.py` | Passcode strength, session time limits, sign out everywhere, wrong-passcode visibility, HTTPS-only headers and cookies |
 
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lint, format and tests on Python 3.11
 and 3.13 for every push.
@@ -365,7 +372,7 @@ hearth/
   templates/       Jinja templates (accessible markup, shared macros)
   static/          app.css, app.js, icon.svg
   schema.sql       database schema
-tests/             204 tests (see above)
+tests/             230 tests (see above)
 Dockerfile, .env.example, pyproject.toml, requirements*.txt
 ```
 

@@ -63,7 +63,9 @@ def add() -> Response | str | tuple[str, int]:
     profile = current_profile()
     data, errors = forms.validate_member(request.form)
     passcode = request.form.get("passcode", "").strip() or passcodes.generate_passcode()
-    problem = passcodes.passcode_problem(passcode)
+    problem = passcodes.passcode_problem(
+        passcode, avoid=(data.name if data else request.form.get("name", ""), profile.elder_name)
+    )
     if problem:
         errors["passcode"] = problem
     elif passcodes.is_passcode_taken(db, profile.id, passcode):
@@ -241,7 +243,7 @@ def change_own_passcode() -> Response | tuple[str, int]:
     errors: forms.Errors = {}
     if passcodes.find_member_id(db, profile.id, current) != member.id:
         errors["current_passcode"] = "That is not your current passcode."
-    problem = passcodes.passcode_problem(new)
+    problem = passcodes.passcode_problem(new, avoid=(member.name, profile.elder_name))
     if problem:
         errors["new_passcode"] = problem
     elif new != request.form.get("new_passcode_again", ""):
