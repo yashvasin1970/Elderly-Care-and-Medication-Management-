@@ -1,6 +1,6 @@
 Flask>=3.1,<4
 # Floors include known security fixes (Werkzeug 3.0.6, Jinja2 3.1.6).
-Werkzeug>=3.0.6,<4
+Werkzeug>=3.1.9,<4
 Jinja2>=3.1.6,<4
 python-dotenv>=1.0
 tzdata>=2024.1
