@@ -3,18 +3,10 @@
 {% block title %}Sign in{% endblock %}
 
 {% block content %}
-<div class="hero">
-  <h1>A care circle <em>you</em> are in charge of</h1>
-  <p class="lead">
-    Hearth helps you keep on top of your medicines and doctor visits, and keeps the people
-    who care about you in the loop. You decide who sees what, and nothing about your
-    medicines changes without your say-so.
-  </p>
-</div>
-
-<div class="two-columns">
-  <section class="card" aria-labelledby="sign-in-heading">
-    <h2 id="sign-in-heading">Sign in to your circle</h2>
+<div class="welcome">
+  <section class="card sign-in-card" aria-labelledby="sign-in-heading">
+    <h1 id="sign-in-heading">Welcome to Hearth</h1>
+    <p class="lead">Sign in with your circle code and your own passcode.</p>
     {% if error %}
     <p class="flash flash-error" role="alert">{{ error }}</p>
     {% endif %}
@@ -22,7 +14,7 @@
       {{ csrf() }}
       <div class="field">
         <label for="circle_code">Circle code</label>
-        <p class="hint" id="circle_code-hint">Eight letters and numbers, like ABCD-2345.</p>
+        <p class="hint" id="circle_code-hint">Eight letters and numbers, for example ABCD-2345. Small or capital letters both work.</p>
         <input id="circle_code" name="circle_code" type="text" value="{{ circle_code }}" required
                autocomplete="username" autocapitalize="characters" spellcheck="false"
                maxlength="12" aria-describedby="circle_code-hint">
@@ -31,50 +23,59 @@
         <label for="passcode">Your passcode</label>
         <input id="passcode" name="passcode" type="password" required
                autocomplete="current-password" maxlength="64">
+        <div class="check reveal" data-reveal="passcode" hidden>
+          <input type="checkbox" id="show-passcode">
+          <label for="show-passcode">Show my passcode as I type</label>
+        </div>
       </div>
-      <button type="submit" class="button button-primary button-large">Sign in</button>
+      <button type="submit" class="button button-primary button-huge">Sign in</button>
     </form>
+    <p class="help-text">Forgotten your passcode? Ask the owner of your circle to give you a new one.</p>
   </section>
 
-  <section class="card" aria-labelledby="start-heading">
-    <h2 id="start-heading">New here?</h2>
-    <p>Set up a circle for yourself, or sit with a parent and set one up together.</p>
-    <p><a class="button button-secondary" href="{{ url_for('auth.start') }}">Create a care circle</a></p>
+  <div class="welcome-side">
+    <section class="card" aria-labelledby="start-heading">
+      <h2 id="start-heading">New to Hearth?</h2>
+      <p>Set up a circle for yourself, or sit with a parent and set one up together. It takes two minutes.</p>
+      <p><a class="button button-secondary button-large" href="{{ url_for('auth.start') }}">Create a care circle</a></p>
+    </section>
 
     {% if demo_logins %}
-    <h3>Try the example circle</h3>
-    <p>Circle code: <strong class="code">{{ demo_code }}</strong></p>
-    <table class="plain-table">
-      <caption class="visually-hidden">Example sign-in details</caption>
-      <thead><tr><th scope="col">Sign in as</th><th scope="col">Passcode</th></tr></thead>
-      <tbody>
-        {% for who, passcode in demo_logins %}
-        <tr><th scope="row">{{ who }}</th><td><span class="code">{{ passcode }}</span></td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <section class="card" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Try the example circle</h2>
+      <p>Circle code: <strong class="code">{{ demo_code }}</strong></p>
+      <table class="plain-table">
+        <caption class="visually-hidden">Example sign-in details</caption>
+        <thead><tr><th scope="col">Sign in as</th><th scope="col">Passcode</th></tr></thead>
+        <tbody>
+          {% for who, passcode in demo_logins %}
+          <tr><th scope="row">{{ who }}</th><td><span class="code">{{ passcode }}</span></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </section>
     {% endif %}
-  </section>
+  </div>
 </div>
 
 <section aria-labelledby="how-heading" class="how">
-  <h2 id="how-heading">How Hearth is different</h2>
+  <h2 id="how-heading">A care circle that you are in charge of</h2>
   <ul class="feature-list">
-    <li>
+    <li class="card">
       <h3>You have the final say</h3>
-      <p>When someone suggests a change to your medicines, you see exactly what would change and approve or decline it.</p>
+      <p>When someone suggests a change to your medicines, you see exactly what would change, and you say yes or no.</p>
     </li>
-    <li>
+    <li class="card">
       <h3>Reminders that fit your day</h3>
-      <p>Doses are tied to your routine, like “after breakfast”. Hearth notices when your routine shifts and offers to move with it.</p>
+      <p>Medicines are tied to your day, like “after breakfast”. Hearth notices when your routine changes and offers to follow it.</p>
     </li>
-    <li>
+    <li class="card">
       <h3>You are always told first</h3>
-      <p>Family and caretakers are only alerted if a dose stays unconfirmed, and only for the medicines you mark as important.</p>
+      <p>Your family is only told if a dose is still not taken, and only for the medicines you mark as important.</p>
     </li>
-    <li>
+    <li class="card">
       <h3>Ready for the doctor</h3>
-      <p>Before each appointment, Hearth prepares a one-page summary with your own questions on it.</p>
+      <p>Before each visit, Hearth prepares one page with your own questions at the top.</p>
     </li>
   </ul>
 </section>

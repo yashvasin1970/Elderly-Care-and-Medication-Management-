@@ -1,21 +1,26 @@
 /* Hearth stylesheet.
  *
- * Built for older eyes and hands first: large type, strong contrast, big
- * targets, and nothing that relies on colour alone. Colours are tokens, so
- * dark mode and the high-contrast setting only swap the token values.
+ * Designed for older eyes and hands first:
+ * - warm, light colours by default, with Dark and High contrast as choices
+ * - 20px body text, and two larger sizes to choose from
+ * - big, clearly labelled buttons; icons always come with words
+ * - nothing that relies on colour alone
+ * Colours are tokens, so each theme only swaps the token values.
  */
 
-/* ---- Tokens ----------------------------------------------------------- */
+/* ---- Colour themes ---------------------------------------------------- */
 
 :root {
-  --bg: #fbf7f1;
+  --bg: #faf6ef;
   --surface: #ffffff;
+  --surface-soft: #f3ece2;
   --text: #1f1a17;
-  --muted: #564b42;
+  --muted: #4a4038;
   --line: #ddd2c4;
-  --border: #7d6e5f;
+  --border: #6f6153;
   --primary: #9a3412;
   --primary-strong: #7c2d12;
+  --primary-soft: #fff1e6;
   --on-primary: #ffffff;
   --focus: #1d4ed8;
   --good: #14532d;
@@ -26,42 +31,47 @@
   --bad-bg: #fee2e2;
   --info: #1e3a8a;
   --info-bg: #dbeafe;
-  --radius: 0.75rem;
+  --shadow: 0 0.15rem 0.6rem rgb(60 40 20 / 0.08);
+  --radius: 0.85rem;
+  --line-width: 0.0625rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #171412;
-    --surface: #231e1a;
-    --text: #f4ede4;
-    --muted: #cdc1b3;
-    --line: #40372f;
-    --border: #a39483;
-    --primary: #fdba74;
-    --primary-strong: #fed7aa;
-    --on-primary: #1f1a17;
-    --focus: #93c5fd;
-    --good: #86efac;
-    --good-bg: #14321f;
-    --warn: #fcd34d;
-    --warn-bg: #3a2a0a;
-    --bad: #fca5a5;
-    --bad-bg: #401515;
-    --info: #bfdbfe;
-    --info-bg: #172a52;
-  }
+:root.theme-dark {
+  --bg: #171412;
+  --surface: #231e1a;
+  --surface-soft: #2b241f;
+  --text: #f4ede4;
+  --muted: #cdc1b3;
+  --line: #40372f;
+  --border: #a39483;
+  --primary: #fdba74;
+  --primary-strong: #fed7aa;
+  --primary-soft: #3a2416;
+  --on-primary: #1f1a17;
+  --focus: #93c5fd;
+  --good: #86efac;
+  --good-bg: #14321f;
+  --warn: #fcd34d;
+  --warn-bg: #3a2a0a;
+  --bad: #fca5a5;
+  --bad-bg: #401515;
+  --info: #bfdbfe;
+  --info-bg: #172a52;
+  --shadow: none;
+  color-scheme: dark;
 }
 
-/* High contrast: chosen in "Make this easier to read". */
-.contrast-high {
+:root.theme-high {
   --bg: #ffffff;
   --surface: #ffffff;
+  --surface-soft: #ffffff;
   --text: #000000;
   --muted: #000000;
   --line: #000000;
   --border: #000000;
   --primary: #000000;
   --primary-strong: #1f1f1f;
+  --primary-soft: #ffffff;
   --on-primary: #ffffff;
   --focus: #b91c1c;
   --good: #000000;
@@ -72,29 +82,8 @@
   --bad-bg: #ffffff;
   --info: #000000;
   --info-bg: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .contrast-high {
-    --bg: #000000;
-    --surface: #000000;
-    --text: #ffffff;
-    --muted: #ffffff;
-    --line: #ffffff;
-    --border: #ffffff;
-    --primary: #ffffff;
-    --primary-strong: #e5e5e5;
-    --on-primary: #000000;
-    --focus: #fde047;
-    --good: #ffffff;
-    --good-bg: #000000;
-    --warn: #ffffff;
-    --warn-bg: #000000;
-    --bad: #ffffff;
-    --bad-bg: #000000;
-    --info: #ffffff;
-    --info-bg: #000000;
-  }
+  --shadow: none;
+  --line-width: 0.125rem;
 }
 
 /* ---- Base ------------------------------------------------------------- */
@@ -106,17 +95,17 @@
 }
 
 html {
-  font-size: 112.5%; /* 18px: a comfortable default for older readers */
+  font-size: 125%; /* 20px: comfortable for older readers */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 html.size-large {
-  font-size: 131.25%;
+  font-size: 143.75%; /* 23px */
 }
 
 html.size-larger {
-  font-size: 150%;
+  font-size: 162.5%; /* 26px */
 }
 
 body {
@@ -124,7 +113,7 @@ body {
   background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  line-height: 1.6;
+  line-height: 1.55;
   overflow-wrap: break-word;
 }
 
@@ -133,7 +122,7 @@ body {
 }
 
 .wrap {
-  width: min(100% - 2rem, 62rem);
+  width: min(100% - 2rem, 60rem);
   margin-inline: auto;
 }
 
@@ -158,12 +147,24 @@ h1 {
 }
 
 h2 {
-  font-size: 1.4rem;
-  margin-top: 1.75rem;
+  font-size: 1.45rem;
+  margin-top: 2rem;
 }
 
 h3 {
-  font-size: 1.15rem;
+  font-size: 1.2rem;
+}
+
+/* A heading with an icon lines the two up neatly. */
+h2:has(> .icon),
+h3:has(> .icon) {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.icon {
+  flex: none;
 }
 
 .card > h2:first-child,
@@ -182,11 +183,12 @@ table {
 
 p,
 li {
-  max-width: 68ch;
+  max-width: 70ch;
 }
 
 a {
   color: var(--primary);
+  font-weight: 600;
   text-decoration-thickness: 0.09em;
   text-underline-offset: 0.18em;
 }
@@ -197,9 +199,9 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 0.2rem solid var(--focus);
+  outline: 0.25rem solid var(--focus);
   outline-offset: 0.2rem;
-  border-radius: 0.25rem;
+  border-radius: 0.3rem;
 }
 
 .visually-hidden {
@@ -223,7 +225,6 @@ a:hover {
   padding: 0.75rem 1.25rem;
   background: var(--primary);
   color: var(--on-primary);
-  font-weight: 700;
   border-radius: var(--radius);
 }
 
@@ -233,12 +234,13 @@ a:hover {
 }
 
 .lead {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
 
 .muted,
 .hint,
-.small-print {
+.small-print,
+.help-text {
   color: var(--muted);
 }
 
@@ -250,6 +252,7 @@ a:hover {
   padding: 1.25rem;
   border: 0.125rem dashed var(--border);
   border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .warning-text {
@@ -263,8 +266,8 @@ a:hover {
 }
 
 .code {
-  padding: 0.1rem 0.4rem;
-  border: 0.0625rem solid var(--border);
+  padding: 0.05rem 0.4rem;
+  border: var(--line-width) solid var(--border);
   border-radius: 0.3rem;
   background: var(--surface);
 }
@@ -279,7 +282,7 @@ a:hover {
 
 .site-header {
   background: var(--surface);
-  border-bottom: 0.0625rem solid var(--line);
+  border-bottom: var(--line-width) solid var(--line);
 }
 
 .header-row {
@@ -294,7 +297,7 @@ a:hover {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   font-weight: 800;
   color: var(--text);
   text-decoration: none;
@@ -316,60 +319,118 @@ a:hover {
 
 .who-member {
   color: var(--muted);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
 }
 
-.main-nav ul,
-.more-nav ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.5rem;
+.sign-out {
+  margin: 0;
+}
+
+.main-nav {
+  position: relative;
+  padding-bottom: 0.9rem;
+}
+
+.main-nav > ul {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.main-nav a,
-.more-nav a {
-  display: inline-flex;
+.main-nav > ul > li > a,
+.more-menu > summary {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  min-height: 2.75rem;
-  padding: 0.35rem 0.9rem;
+  justify-content: center;
+  gap: 0.2rem;
+  min-height: 4.25rem;
+  height: 100%;
+  padding: 0.5rem 0.3rem;
+  border: 0.125rem solid var(--line);
   border-radius: var(--radius);
+  background: var(--surface);
   color: var(--text);
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-align: center;
+  text-decoration: none;
+  hyphens: auto;
+  cursor: pointer;
+}
+
+.main-nav > ul > li > a:hover,
+.more-menu > summary:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.main-nav > ul > li > a[aria-current="page"],
+.more-menu > summary.is-current {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--on-primary);
+}
+
+.more-menu > summary {
+  list-style: none;
+}
+
+.more-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* The "More" menu opens as a panel below the tiles. */
+.more-menu > ul {
+  position: absolute;
+  right: 0;
+  top: calc(100% - 0.4rem);
+  z-index: 5;
+  width: min(20rem, 100%);
+  margin: 0;
+  padding: 0.5rem;
+  list-style: none;
+  background: var(--surface);
+  border: 0.125rem solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 0.18);
+}
+
+.more-menu > ul a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-height: 3rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0.5rem;
+  color: var(--text);
   text-decoration: none;
 }
 
-.main-nav a:hover,
-.more-nav a:hover {
-  text-decoration: underline;
+.more-menu > ul a:hover {
+  background: var(--surface-soft);
 }
 
-.main-nav a[aria-current="page"],
-.more-nav a[aria-current="page"] {
+.more-menu > ul a[aria-current="page"] {
   background: var(--primary);
   color: var(--on-primary);
 }
 
-.more-nav {
-  padding-bottom: 0.5rem;
-}
-
-.more-nav a {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--muted);
-}
-
 .count {
-  margin-left: 0.4rem;
+  display: inline-block;
   padding: 0 0.5rem;
+  border: var(--line-width) solid currentColor;
   border-radius: 999px;
   background: var(--warn-bg);
   color: var(--warn);
-  border: 0.0625rem solid currentColor;
+  font-size: 0.85rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 /* ---- Buttons ---------------------------------------------------------- */
@@ -378,10 +439,10 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   min-height: 3rem;
   padding: 0.5rem 1.2rem;
-  border: 0.125rem solid transparent;
+  border: 0.15rem solid transparent;
   border-radius: var(--radius);
   font: inherit;
   font-weight: 700;
@@ -391,10 +452,22 @@ a:hover {
   cursor: pointer;
 }
 
+.button-small {
+  min-height: 2.6rem;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.9rem;
+}
+
 .button-large {
-  min-height: 3.5rem;
-  padding-inline: 1.5rem;
-  font-size: 1.1rem;
+  min-height: 3.4rem;
+  padding-inline: 1.4rem;
+  font-size: 1.05rem;
+}
+
+.button-huge {
+  width: 100%;
+  min-height: 4.25rem;
+  font-size: 1.35rem;
 }
 
 .button-primary {
@@ -414,23 +487,23 @@ a:hover {
 }
 
 .button-secondary:hover {
-  border-color: var(--primary-strong);
+  background: var(--primary-soft);
   color: var(--primary-strong);
 }
 
 .button-quiet {
-  background: transparent;
+  background: var(--surface);
   border-color: var(--border);
   color: var(--text);
 }
 
 .button-quiet:hover {
-  background: var(--surface);
+  background: var(--surface-soft);
   color: var(--text);
 }
 
 .button-danger {
-  background: transparent;
+  background: var(--surface);
   border-color: var(--bad);
   color: var(--bad);
 }
@@ -454,7 +527,8 @@ a:hover {
 
 /* ---- Layout pieces ---------------------------------------------------- */
 
-.page-head {
+.page-head,
+.today-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -464,15 +538,16 @@ a:hover {
 }
 
 .page-head h1,
-.page-head .lead {
+.page-head .lead,
+.today-head h1 {
   margin-bottom: 0.25rem;
 }
 
 .two-columns {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
   gap: 1.25rem;
-  margin-bottom: 1.25rem;
+  margin-block: 1.5rem 1.25rem;
 }
 
 .two-columns > .card {
@@ -483,8 +558,9 @@ a:hover {
   margin-bottom: 1.25rem;
   padding: 1.25rem;
   background: var(--surface);
-  border: 0.0625rem solid var(--line);
+  border: var(--line-width) solid var(--line);
   border-radius: 1rem;
+  box-shadow: var(--shadow);
 }
 
 .card > :last-child {
@@ -504,21 +580,12 @@ a:hover {
 }
 
 .notice {
+  max-width: none;
   padding: 0.9rem 1.1rem;
   border-left: 0.5rem solid var(--info);
   border-radius: var(--radius);
   background: var(--info-bg);
   color: var(--info);
-  max-width: none;
-}
-
-.hero {
-  padding-block: 1rem 0.5rem;
-}
-
-.hero h1 {
-  font-size: 2.3rem;
-  max-width: 22ch;
 }
 
 .feature-list,
@@ -527,19 +594,22 @@ a:hover {
 .request-list,
 .insight-list,
 .journal-list,
-.outbox-list {
+.outbox-list,
+.now-list,
+.dose-rows {
   margin: 0 0 1rem;
   padding: 0;
   list-style: none;
 }
 
 .feature-list li,
-.dose-list li,
 .medicine-list li,
 .request-list li,
 .insight-list li,
 .journal-list li,
-.outbox-list li {
+.outbox-list li,
+.now-list li,
+.dose-rows li {
   max-width: none;
 }
 
@@ -547,6 +617,10 @@ a:hover {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
   gap: 1.25rem;
+}
+
+.feature-list .card {
+  margin: 0;
 }
 
 .simple-list {
@@ -580,14 +654,51 @@ a:hover {
   margin: 0;
 }
 
+/* ---- Sign-in page ----------------------------------------------------- */
+
+.welcome {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.sign-in-card {
+  border: 0.1875rem solid var(--primary);
+}
+
+.sign-in-card h1 {
+  font-size: 2.1rem;
+}
+
+.welcome-side .card:last-child {
+  margin-bottom: 0;
+}
+
+.reveal {
+  margin-top: 0.75rem;
+}
+
+.help-text {
+  margin-top: 1rem;
+}
+
+.how {
+  margin-top: 1rem;
+}
+
 /* ---- Messages --------------------------------------------------------- */
 
 .flash {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   max-width: none;
-  padding: 0.9rem 1.1rem;
+  padding: 1rem 1.25rem;
   border-left: 0.5rem solid currentColor;
   border-radius: var(--radius);
-  font-weight: 600;
+  font-size: 1.1rem;
+  font-weight: 700;
 }
 
 .flash-success {
@@ -616,7 +727,7 @@ a:hover {
 
 .error-summary h2 {
   margin-top: 0;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
 }
 
 .error-summary ul {
@@ -626,7 +737,7 @@ a:hover {
 /* ---- Forms ------------------------------------------------------------ */
 
 .field {
-  margin-bottom: 1.1rem;
+  margin-bottom: 1.2rem;
 }
 
 label,
@@ -636,7 +747,7 @@ legend {
 
 label {
   display: block;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.3rem;
 }
 
 .optional {
@@ -645,12 +756,12 @@ label {
 }
 
 .hint {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.4rem;
   font-size: 0.95rem;
 }
 
 .error {
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.4rem;
   padding-left: 0.6rem;
   border-left: 0.3rem solid var(--bad);
   color: var(--bad);
@@ -662,17 +773,17 @@ select,
 textarea {
   width: 100%;
   max-width: 32rem;
-  min-height: 3rem;
-  padding: 0.5rem 0.75rem;
-  border: 0.125rem solid var(--border);
-  border-radius: 0.5rem;
+  min-height: 3.2rem;
+  padding: 0.5rem 0.8rem;
+  border: 0.15rem solid var(--border);
+  border-radius: 0.6rem;
   background: var(--surface);
   color: var(--text);
   font: inherit;
 }
 
 textarea {
-  min-height: 6rem;
+  min-height: 7rem;
   resize: vertical;
 }
 
@@ -680,22 +791,22 @@ textarea {
 .field-invalid select,
 .field-invalid textarea {
   border-color: var(--bad);
-  border-width: 0.1875rem;
+  border-width: 0.2rem;
 }
 
 input[type="checkbox"],
 input[type="radio"] {
-  width: 1.6rem;
-  height: 1.6rem;
+  width: 1.75rem;
+  height: 1.75rem;
   min-height: 0;
-  margin: 0.15rem 0 0;
+  margin: 0.1rem 0 0;
   padding: 0;
   accent-color: var(--primary);
 }
 
 .check {
   display: grid;
-  grid-template-columns: 1.6rem 1fr;
+  grid-template-columns: 1.75rem 1fr;
   gap: 0.1rem 0.75rem;
   align-items: start;
   margin-bottom: 0.9rem;
@@ -703,7 +814,7 @@ input[type="radio"] {
 
 .check label {
   margin: 0;
-  padding-block: 0.15rem;
+  padding-block: 0.1rem;
   font-weight: 600;
 }
 
@@ -722,7 +833,7 @@ fieldset {
   min-width: 0;
   margin: 0 0 1.25rem;
   padding: 1rem 1.1rem 0.4rem;
-  border: 0.0625rem solid var(--border);
+  border: var(--line-width) solid var(--border);
   border-radius: var(--radius);
 }
 
@@ -757,32 +868,243 @@ legend {
   margin: 0.25rem 0.5rem 0.25rem 0;
 }
 
-/* ---- Doses and medicines ---------------------------------------------- */
+/* ---- Today ------------------------------------------------------------ */
 
-.dose {
-  margin-bottom: 1rem;
-  padding: 1.1rem 1.25rem;
+.today-date {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.progress-box {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
   background: var(--surface);
-  border: 0.0625rem solid var(--line);
-  border-left: 0.6rem solid var(--border);
+  border: var(--line-width) solid var(--line);
   border-radius: 1rem;
-  scroll-margin-top: 1rem;
 }
 
-.dose-taken {
-  border-left-color: var(--good);
+.progress-text {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
 }
 
-.dose-due,
-.dose-snoozed {
-  border-left-color: var(--primary);
+progress {
+  display: block;
+  width: 100%;
+  height: 1.1rem;
+  border: var(--line-width) solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  overflow: hidden;
+  appearance: none;
 }
 
-.dose-late,
-.dose-missed {
-  border-left-color: var(--bad);
+progress::-webkit-progress-bar {
+  background: var(--surface-soft);
 }
 
+progress::-webkit-progress-value {
+  background: var(--good);
+}
+
+progress::-moz-progress-bar {
+  background: var(--good);
+}
+
+.now-section {
+  margin-bottom: 1.5rem;
+}
+
+.now-section > h2 {
+  color: var(--primary);
+}
+
+.now-card {
+  margin-bottom: 1rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 0.1875rem solid var(--primary);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow);
+}
+
+.now-late {
+  border-color: var(--bad);
+}
+
+.now-snoozed {
+  border-color: var(--info);
+}
+
+.now-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.now-top > div {
+  flex: 1 1 14rem;
+}
+
+.now-name {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.now-when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+  margin: 0.25rem 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.now-when span {
+  font-weight: 500;
+}
+
+.now-actions {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+}
+
+.now-actions form {
+  margin: 0;
+}
+
+.now-secondary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.75rem;
+}
+
+.now-secondary .button {
+  width: 100%;
+}
+
+.calm-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border-left: 0.5rem solid var(--good);
+  border-radius: 1rem;
+  background: var(--good-bg);
+}
+
+.calm-card > .icon {
+  color: var(--good);
+}
+
+.calm-card h2 {
+  margin: 0 0 0.25rem;
+}
+
+.calm-card p {
+  margin: 0;
+}
+
+.day-part {
+  margin: 1.5rem 0 0.25rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 0.125rem solid var(--line);
+  color: var(--muted);
+  font-size: 1.2rem;
+}
+
+.dose-row {
+  display: grid;
+  grid-template-columns: 5.5rem auto 1fr auto;
+  grid-template-areas: "time pill text end";
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.85rem 0;
+  border-bottom: var(--line-width) solid var(--line);
+}
+
+.row-time {
+  grid-area: time;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.dose-row > .pill {
+  grid-area: pill;
+}
+
+.row-text {
+  grid-area: text;
+}
+
+.row-text p {
+  margin: 0;
+}
+
+.row-name {
+  font-size: 1.1rem;
+}
+
+.row-detail {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.row-end {
+  grid-area: end;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.row-end form {
+  margin: 0;
+}
+
+.dose-row .dose-advice {
+  grid-column: 1 / -1;
+}
+
+.row-taken .row-name,
+.row-skipped .row-name {
+  color: var(--muted);
+}
+
+.dose-look,
+.dose-log {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+}
+
+.dose-log {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-weight: 600;
+}
+
+.dose-advice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  max-width: none;
+  margin: 0.9rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+/* Medicine cards on the Medicines page. */
 .dose-main {
   display: flex;
   flex-wrap: wrap;
@@ -802,48 +1124,6 @@ legend {
 
 .dose-amount {
   font-weight: 500;
-}
-
-.dose-when {
-  margin: 0.15rem 0 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-}
-
-.dose-look,
-.dose-log {
-  margin: 0.15rem 0 0;
-  color: var(--muted);
-}
-
-.dose-advice {
-  margin: 0.9rem 0 0;
-  padding: 0.75rem 1rem;
-  border-radius: var(--radius);
-  background: var(--warn-bg);
-  color: var(--warn);
-  max-width: none;
-}
-
-.dose-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-.dose-actions form {
-  flex: 1 1 13rem;
-  margin: 0;
-}
-
-.dose-actions .button {
-  width: 100%;
-}
-
-/* A lone "Undo" stays modest; the big buttons are for doses still open. */
-.dose-actions form:only-child {
-  flex: 0 0 auto;
 }
 
 .medicine .facts {
@@ -877,13 +1157,15 @@ legend {
 
 /* Status is always written in words; colour only reinforces it. */
 .chip {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   padding: 0.15rem 0.75rem;
-  border: 0.0625rem solid currentColor;
+  border: var(--line-width) solid currentColor;
   border-radius: 999px;
   background: var(--surface);
   color: var(--text);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 700;
   white-space: nowrap;
 }
@@ -929,7 +1211,7 @@ caption {
 th,
 td {
   padding: 0.6rem 0.75rem 0.6rem 0;
-  border-bottom: 0.0625rem solid var(--line);
+  border-bottom: var(--line-width) solid var(--line);
   text-align: left;
   vertical-align: top;
 }
@@ -949,7 +1231,7 @@ meter {
   vertical-align: middle;
 }
 
-/* ---- Care Weather, journal, outbox ------------------------------------ */
+/* ---- Care Weather, notes, emails -------------------------------------- */
 
 .weather {
   display: flex;
@@ -994,7 +1276,7 @@ meter {
 .email-body {
   margin: 0.75rem 0 0;
   padding: 1rem;
-  border: 0.0625rem solid var(--line);
+  border: var(--line-width) solid var(--line);
   border-radius: var(--radius);
   background: var(--bg);
   font: inherit;
@@ -1021,32 +1303,55 @@ summary .muted {
 
 .site-footer {
   padding-block: 1.5rem 2.5rem;
-  border-top: 0.0625rem solid var(--line);
+  border-top: var(--line-width) solid var(--line);
   background: var(--surface);
 }
 
 .display-form h2 {
   margin-top: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .display-options {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
+  align-items: flex-end;
+  gap: 0 1rem;
   margin-bottom: 1rem;
 }
 
-.display-options label {
-  margin: 0;
+.display-options .field {
+  margin-bottom: 0.75rem;
 }
 
 .display-options select {
   width: auto;
+  min-width: 10rem;
+}
+
+.display-options .button {
+  margin-bottom: 0.75rem;
 }
 
 /* ---- Small screens ---------------------------------------------------- */
+
+@media (max-width: 48rem) {
+  .main-nav > ul {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+
+  .main-nav > ul > li > a,
+  .more-menu > summary {
+    min-height: 3.75rem;
+    padding: 0.4rem 0.15rem;
+    font-size: 0.75rem;
+  }
+
+  .welcome {
+    grid-template-columns: 1fr;
+  }
+}
 
 @media (max-width: 40rem) {
   /* Keep "Sign out" beside the logo so the page content starts sooner. */
@@ -1055,31 +1360,29 @@ summary .muted {
     flex-basis: 100%;
   }
 
-  .header-row form {
+  .header-row .sign-out {
     margin-left: auto;
-  }
-
-  .main-nav ul,
-  .more-nav ul {
-    gap: 0;
-  }
-
-  .main-nav a {
-    padding-inline: 0.6rem;
-  }
-
-  .more-nav a {
-    min-height: 2.5rem;
-    padding-inline: 0.6rem;
-    font-size: 0.9rem;
   }
 
   h1 {
     font-size: 1.75rem;
   }
 
-  .hero h1 {
-    font-size: 2rem;
+  .now-name {
+    font-size: 1.4rem;
+  }
+
+  .dose-row {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "pill time"
+      "pill text"
+      "end end";
+    gap: 0.25rem 0.85rem;
+  }
+
+  .row-end {
+    justify-content: flex-start;
   }
 }
 
@@ -1096,7 +1399,8 @@ summary .muted {
 }
 
 @media print {
-  :root {
+  :root,
+  :root.theme-dark {
     --bg: #ffffff;
     --surface: #ffffff;
     --text: #000000;
@@ -1104,6 +1408,7 @@ summary .muted {
     --line: #999999;
     --border: #666666;
     --primary: #000000;
+    --shadow: none;
   }
 
   html {
@@ -1111,7 +1416,6 @@ summary .muted {
   }
 
   .main-nav,
-  .more-nav,
   .site-footer,
   .flashes,
   .skip-link,

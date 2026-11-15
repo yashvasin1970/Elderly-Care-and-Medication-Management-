@@ -98,6 +98,24 @@ def _runs_on(medication: Medication, day: date) -> bool:
     return medication.end_date is None or day <= medication.end_date
 
 
+#: Parts of the day, in order, with the hour each one starts.
+PARTS_OF_DAY: tuple[tuple[str, int], ...] = (
+    ("morning", 5),
+    ("afternoon", 11),
+    ("evening", 17),
+    ("night", 21),
+)
+
+
+def part_of_day(moment: datetime | time) -> str:
+    """Name the part of the day a time falls in: morning, afternoon, evening or night."""
+    found = "night"  # before 5 am still counts as the night
+    for name, starts in PARTS_OF_DAY:
+        if moment.hour >= starts:
+            found = name
+    return found
+
+
 def doses_per_day(slots: Iterable[Slot]) -> float:
     """Average number of doses per day across a week for the given slots."""
     return sum(slot.days_mask.count("1") / 7 for slot in slots if slot.retired_at is None)

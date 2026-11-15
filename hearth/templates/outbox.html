@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% from "macros.html" import csrf %}
-{% block title %}Outbox{% endblock %}
+{% block title %}Emails sent{% endblock %}
 
 {% block content %}
 <div class="page-head">
-  <h1>Outbox</h1>
+  <h1>Emails sent</h1>
   <form method="post" action="{{ url_for('insights.check_now') }}">
     {{ csrf() }}
     <button type="submit" class="button button-secondary">Check for reminders now</button>

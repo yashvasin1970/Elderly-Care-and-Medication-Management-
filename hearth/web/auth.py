@@ -27,8 +27,11 @@ from .security import now
 bp = Blueprint("auth", __name__)
 
 DISPLAY_COOKIE = "hearth_display"
-TEXT_SIZES = ("normal", "large", "larger")
-CONTRASTS = ("standard", "high")
+#: Display choices, each with the label shown in the settings. The first is the default.
+TEXT_SIZES = (("normal", "Large"), ("large", "Larger"), ("larger", "Largest"))
+# Light is the default on purpose: a setting someone picks is more predictable
+# for older users than a device-wide dark mode they may not know is switched on.
+THEMES = (("light", "Light"), ("dark", "Dark"), ("high", "High contrast"))
 
 _SIGN_IN_FAILED = "That circle code and passcode do not match. Check both and try again."
 _LOCKED = "Too many attempts. To keep the circle safe, sign-in is paused for 15 minutes."
@@ -181,15 +184,13 @@ def _start_form(values: forms.Form, errors: forms.Errors) -> str:
 
 @bp.post("/preferences")
 def preferences() -> Response:
-    """Remember the visitor's text size and contrast in a cookie."""
-    size = request.form.get("text_size", "")
-    contrast = request.form.get("contrast", "")
-    size = size if size in TEXT_SIZES else TEXT_SIZES[0]
-    contrast = contrast if contrast in CONTRASTS else CONTRASTS[0]
+    """Remember the visitor's text size and colours in a cookie."""
+    size = _choice(request.form.get("text_size", ""), TEXT_SIZES)
+    theme = _choice(request.form.get("theme", ""), THEMES)
     response = redirect(_safe_next(request.form.get("next", "")))
     response.set_cookie(
         DISPLAY_COOKIE,
-        f"{size}:{contrast}",
+        f"{size}:{theme}",
         max_age=_ONE_YEAR,
         httponly=True,
         samesite="Lax",
@@ -200,11 +201,13 @@ def preferences() -> Response:
 
 def read_display_preferences() -> dict[str, str]:
     """Parse the display cookie, ignoring anything unexpected."""
-    size, _, contrast = request.cookies.get(DISPLAY_COOKIE, "").partition(":")
-    return {
-        "text_size": size if size in TEXT_SIZES else TEXT_SIZES[0],
-        "contrast": contrast if contrast in CONTRASTS else CONTRASTS[0],
-    }
+    size, _, theme = request.cookies.get(DISPLAY_COOKIE, "").partition(":")
+    return {"text_size": _choice(size, TEXT_SIZES), "theme": _choice(theme, THEMES)}
+
+
+def _choice(value: str, options: tuple[tuple[str, str], ...]) -> str:
+    """Return ``value`` if it is one of the options, otherwise the default (first) one."""
+    return value if value in {key for key, _ in options} else options[0][0]
 
 
 def _safe_next(target: str) -> str:

@@ -39,8 +39,8 @@ Every requirement in the problem statement, and where Hearth meets it:
 
 | The problem statement asks for… | Hearth |
 |---|---|
-| Elderly people managing daily medicines, appointments and routines | A large-type **Today** screen with *Took it / Remind me in 15 minutes / Skip* for each dose; appointments; a daily routine that reminders follow |
-| Family and caretakers kept informed | Role-based circle members, alert emails, a weekly **Care Weather** summary, and an **Outbox** showing every message sent |
+| Elderly people managing daily medicines, appointments and routines | A large-type **Today** screen that leads with what to take now (*I took it / Remind me in 15 minutes / Skip this dose*); doctor visits; a daily routine that reminders follow |
+| Family and caretakers kept informed | Role-based circle members, alert emails, a weekly **Care Weather** summary, and an **Emails sent** page (outbox) listing every message |
 | A shared ecosystem with secure, passcode-based access | One **circle code** per elder plus a **personal passcode** per member; four roles (owner, caretaker, family, viewer) |
 | Authorized members can view, add, edit and manage medication schedules | Medicine list and form, with permissions per role and the elder's approval for changes |
 | Track adherence | Every dose is recorded as taken, skipped or missed; adherence by day and by medicine; doctor visit summary |
@@ -90,7 +90,7 @@ current medicine list. The elder's questions get asked, and the doctor sees real
 **Also included:**
 - **Refill forecasts:** run-out dates from stock and daily use, with a reminder 5 days ahead.
 - **Missed-dose instructions:** only what the label or pharmacist says; Hearth never makes up its own advice.
-- **Read aloud:** uses the browser's built-in speech.
+- **"Read this to me":** reads the day aloud using the browser's built-in speech.
 - **Pill pictures:** colour and shape, so the elder can recognise each medicine at a glance.
 - **Fill in from a sentence** (optional Gemini): a person always checks the form before it is saved.
 
@@ -172,7 +172,8 @@ practical suggestion:
   at the same time, and writes each message under a unique key before sending. Running it twice
   sends nothing new.
 - **Email** goes out through SMTP when configured. Without it, Hearth runs in **demo mode**: every
-  message is recorded on the **Outbox** page, so the whole flow can be seen with no setup.
+  message is recorded on the **Emails sent** page (the outbox), so the whole flow can be seen
+  with no setup.
 
 ## 5. Run it
 
@@ -265,16 +266,24 @@ gcloud scheduler jobs create http hearth-reminders --schedule "* * * * *" \
 
 Designed for older eyes and hands, aiming for **WCAG 2.2 AA**:
 
-- **Type and targets:** 18 px base type, with Large and Extra large settings. Buttons are at least
-  48 px tall, and the main dose actions are full width.
-- **Contrast:** every text colour pair is at least 6.8:1 in both light and dark mode (AA asks for
-  4.5:1), and borders are above 3:1. There is also a **High contrast** setting, and status is
-  always written in words (never shown by colour alone).
+- **One clear job per screen:** Today opens with a big **Time to take now** card and an
+  **I took it** button. Then comes "the rest of your day", grouped into Morning, Afternoon,
+  Evening and Night, with a progress bar ("2 of 6 medicines taken today").
+- **Simple navigation:** six large tiles, each with an icon *and* a word (Today, Medicines,
+  Doctor visits, Notes, Care Weather, My circle). Less-used pages sit behind one **More** button.
+- **Type and targets:** 20 px base text, with two larger sizes to choose from. Buttons are at least
+  52 px tall; the main "I took it" button is full width and 85 px tall.
+- **Colours chosen, not imposed:** warm light colours by default, with **Dark** and **High contrast**
+  as explicit choices, so a device-wide dark mode never surprises anyone. Every text colour pair is
+  at least 6.6:1 (AA asks for 4.5:1), borders are above 3:1, and status is always written in words
+  (never shown by colour alone).
+- **Sign-in help:** an optional "Show my passcode as I type", plus plain hints ("small or capital
+  letters both work").
 - **Keyboard and screen readers:** a skip link, landmarks, one `h1` per page and a logical heading
   order, labels on every field, and hints and errors linked to each field with `aria-describedby`.
 - **Form errors:** a summary at the top that receives focus. Each button names its medicine for
-  screen readers ("Took it: Metformin 500 mg").
-- **Read aloud** on the Today screen, using the browser's built-in speech.
+  screen readers ("I took it: Metformin 500 mg").
+- **"Read this to me"** on the Today screen, using the browser's built-in speech.
 - **Works without JavaScript:** every action is a plain HTML form. Script only adds conveniences.
 - **Other details:** `prefers-reduced-motion` is respected, a print stylesheet formats the visit
   summary, and dates use `<time>` elements.

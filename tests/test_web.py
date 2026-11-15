@@ -57,7 +57,7 @@ def test_creating_a_circle_makes_the_elder_its_owner(browser: Browser):
     assert response.status_code == 200
     assert "Your circle is ready, Asha" in page
     assert re.search(r"[A-Z2-9]{4}-[A-Z2-9]{4}", page)
-    assert "Circle owner" in browser.get("/today").get_data(as_text=True)
+    assert "(circle owner)" in browser.get("/today").get_data(as_text=True)
 
 
 def test_creating_a_circle_explains_every_problem(browser: Browser):
@@ -188,7 +188,7 @@ def test_recording_a_dose_updates_status_and_stock(app, as_role, circle):
     response = elder.post(take_action(page), follow_redirects=True)
     page = response.get_data(as_text=True)
     assert "Metformin is recorded as taken" in page
-    assert "Recorded at 9:00 AM by Kamala" in page
+    assert "Taken at 9:00 AM by Kamala" in page
     with app.app_context():
         assert medications.get_medication(get_db(), circle.profile_id, 1).stock_count == 9
 
@@ -344,7 +344,7 @@ def test_inviting_someone_shows_their_passcode_once(app, as_role):
 
     ravi = Browser(app.test_client())
     assert ravi.sign_in(passcode.group(0)).status_code == 302
-    assert "You are Ravi" in ravi.get("/today").get_data(as_text=True)
+    assert "Signed in as Ravi" in ravi.get("/today").get_data(as_text=True)
 
 
 def test_passcodes_must_be_unique_within_a_circle(as_role):
@@ -418,8 +418,8 @@ def test_outbox_check_now_records_due_reminders(app, as_role, circle):
 
 
 def test_display_preferences_apply_to_every_page(browser: Browser, circle):
-    browser.post("/preferences", {"text_size": "larger", "contrast": "high", "next": "/"})
-    assert 'class="size-larger contrast-high"' in browser.get("/").get_data(as_text=True)
+    browser.post("/preferences", {"text_size": "larger", "theme": "high", "next": "/"})
+    assert 'class="size-larger theme-high"' in browser.get("/").get_data(as_text=True)
 
 
 def test_unknown_pages_get_a_friendly_404(browser: Browser):

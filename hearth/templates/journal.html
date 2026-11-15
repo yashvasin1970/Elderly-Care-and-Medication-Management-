@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 {% from "macros.html" import csrf, textarea, error_summary %}
-{% block title %}Journal{% endblock %}
+{% block title %}Notes{% endblock %}
 
 {% block content %}
-<h1>Journal</h1>
+<h1>Notes for the doctor</h1>
 <p class="lead">
   Questions for the doctor, how {{ 'you are' if may('decide_changes') else profile.elder_name ~ ' is' }} feeling,
   and notes from the circle. Everything here appears on the next visit summary.

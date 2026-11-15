@@ -1,9 +1,10 @@
+{% from "icons.html" import icon %}
 <!doctype html>
-<html lang="en" class="size-{{ display.text_size }} contrast-{{ display.contrast }}">
+<html lang="en" class="size-{{ display.text_size }} theme-{{ display.theme }}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="light dark">
+  <meta name="color-scheme" content="{{ 'dark' if display.theme == 'dark' else 'light' }}">
   <meta name="description" content="Hearth is a care circle the elder runs: medicines, appointments and daily routines, shared with family and caretakers.">
   <title>{% block title %}Welcome{% endblock %} · Hearth</title>
   <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
@@ -16,15 +17,15 @@
 <header class="site-header">
   <div class="wrap header-row">
     <a class="brand" href="{{ url_for('auth.home') }}">
-      <img src="{{ url_for('static', filename='icon.svg') }}" alt="" width="36" height="36">
+      <img src="{{ url_for('static', filename='icon.svg') }}" alt="" width="44" height="44">
       <span>Hearth</span>
     </a>
     {% if member %}
     <p class="who">
       <span class="who-circle">{{ profile.elder_name }}’s circle</span>
-      <span class="who-member">You are {{ member.name }} · {{ role_label }}</span>
+      <span class="who-member">Signed in as {{ member.name }} ({{ role_label | lower }})</span>
     </p>
-    <form method="post" action="{{ url_for('auth.sign_out') }}">
+    <form method="post" action="{{ url_for('auth.sign_out') }}" class="sign-out">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <button type="submit" class="button button-quiet">Sign out</button>
     </form>
@@ -33,31 +34,34 @@
 
   {% if member %}
   {% set here = request.endpoint %}
+  {% set more_pages = [('medications.requests_index', 'Suggested changes'), ('circle.routine', 'My daily routine' if may('decide_changes') else 'Daily routine')] %}
+  {% if may('view_activity') %}{% set more_pages = more_pages + [('insights.outbox', 'Emails sent'), ('insights.history', 'History')] %}{% endif %}
+  {% if may('manage_settings') %}{% set more_pages = more_pages + [('circle.settings', 'Settings')] %}{% endif %}
+  {% set in_more = here in more_pages | map('first') | list %}
   <nav class="wrap main-nav" aria-label="Main">
     <ul>
-      {% for endpoint, label in [
-        ('today.show', 'Today'),
-        ('medications.index', 'Medicines'),
-        ('appointments.index', 'Appointments'),
-        ('insights.journal', 'Journal'),
-        ('insights.index', 'Care Weather'),
-        ('circle.index', 'Circle'),
+      {% for endpoint, label, symbol in [
+        ('today.show', 'Today', 'home'),
+        ('medications.index', 'Medicines', 'pill'),
+        ('appointments.index', 'Doctor visits', 'calendar'),
+        ('insights.journal', 'Notes', 'notebook'),
+        ('insights.index', 'Care Weather', 'weather'),
+        ('circle.index', 'My circle' if may('decide_changes') else 'Circle', 'people'),
       ] %}
-      <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ label }}</a></li>
+      <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ icon(symbol) }}<span>{{ label }}</span></a></li>
       {% endfor %}
-    </ul>
-  </nav>
-  <nav class="wrap more-nav" aria-label="More">
-    <ul>
-      <li><a href="{{ url_for('medications.requests_index') }}"{% if here == 'medications.requests_index' %} aria-current="page"{% endif %}>Suggested changes{% if pending_count %} <span class="count">{{ pending_count }} waiting</span>{% endif %}</a></li>
-      <li><a href="{{ url_for('circle.routine') }}"{% if here == 'circle.routine' %} aria-current="page"{% endif %}>Daily routine</a></li>
-      {% if may('view_activity') %}
-      <li><a href="{{ url_for('insights.outbox') }}"{% if here == 'insights.outbox' %} aria-current="page"{% endif %}>Outbox</a></li>
-      <li><a href="{{ url_for('insights.history') }}"{% if here == 'insights.history' %} aria-current="page"{% endif %}>History</a></li>
-      {% endif %}
-      {% if may('manage_settings') %}
-      <li><a href="{{ url_for('circle.settings') }}"{% if here == 'circle.settings' %} aria-current="page"{% endif %}>Settings</a></li>
-      {% endif %}
+      <li class="more-item">
+        <details class="more-menu">
+          <summary{% if in_more %} class="is-current"{% endif %}>
+            {{ icon('more') }}<span>More{% if pending_count %} <span class="count">{{ pending_count }}</span><span class="visually-hidden"> (suggested changes waiting)</span>{% endif %}</span>
+          </summary>
+          <ul>
+            {% for endpoint, label in more_pages %}
+            <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ label }}{% if endpoint == 'medications.requests_index' and pending_count %} <span class="count">{{ pending_count }} waiting</span>{% endif %}</a></li>
+            {% endfor %}
+          </ul>
+        </details>
+      </li>
     </ul>
   </nav>
   {% endif %}
@@ -68,7 +72,9 @@
   {% if messages %}
   <div class="flashes">
     {% for category, message in messages %}
-    <p class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">{{ message }}</p>
+    <p class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
+      {{ icon({'success': 'check', 'error': 'alert'}.get(category, 'info'), 32) }}<span>{{ message }}</span>
+    </p>
     {% endfor %}
   </div>
   {% endif %}
@@ -82,21 +88,25 @@
     <form method="post" action="{{ url_for('auth.preferences') }}" class="display-form" id="display">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="next" value="{{ request.path }}">
-      <h2>Make this easier to read</h2>
+      <h2>Make the screen easier to read</h2>
       <div class="display-options">
-        <label for="text_size">Text size</label>
-        <select id="text_size" name="text_size">
-          {% for size, label in [('normal', 'Standard'), ('large', 'Large'), ('larger', 'Extra large')] %}
-          <option value="{{ size }}"{% if display.text_size == size %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-        <label for="contrast">Contrast</label>
-        <select id="contrast" name="contrast">
-          {% for contrast, label in [('standard', 'Standard'), ('high', 'High contrast')] %}
-          <option value="{{ contrast }}"{% if display.contrast == contrast %} selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-        <button type="submit" class="button button-quiet">Apply</button>
+        <div class="field">
+          <label for="text_size">Text size</label>
+          <select id="text_size" name="text_size">
+            {% for size, label in text_sizes %}
+            <option value="{{ size }}"{% if display.text_size == size %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="field">
+          <label for="theme">Colours</label>
+          <select id="theme" name="theme">
+            {% for theme, label in themes %}
+            <option value="{{ theme }}"{% if display.theme == theme %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="button button-secondary">Apply</button>
       </div>
     </form>
     <p class="small-print">

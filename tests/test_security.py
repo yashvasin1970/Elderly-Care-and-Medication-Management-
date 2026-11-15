@@ -179,7 +179,7 @@ def test_another_circle_cannot_record_this_circles_doses(app, circle, as_role):
     response = outsider.post("/doses/1/2026-11-16/take", follow_redirects=True)
     assert "That dose could not be found" in response.get_data(as_text=True)
     page = as_role(Role.ELDER).get("/today").get_data(as_text=True)
-    assert "Recorded at" not in page
+    assert "Taken at" not in page
 
 
 # --- output encoding and redirects ---------------------------------------

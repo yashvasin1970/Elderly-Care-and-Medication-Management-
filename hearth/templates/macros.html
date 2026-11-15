@@ -58,7 +58,7 @@
 {% macro error_summary(errors) -%}
 {% if errors %}
 <div class="error-summary" role="alert" tabindex="-1">
-  <h2>Something needs fixing before this can be saved</h2>
+  <h2>Please check {{ 'this' if errors | length == 1 else 'these' }} before saving</h2>
   <ul>
     {% for name, message in errors.items() %}
     <li>{{ message }}</li>
@@ -70,8 +70,8 @@
 
 {# A simple picture of the medicine, so it can be recognised at a glance.
    Decorative: the colour and shape are always written out in text as well. #}
-{% macro pill(color, shape) -%}
-<svg class="pill pill-{{ color }}" viewBox="0 0 48 48" width="48" height="48" aria-hidden="true" focusable="false">
+{% macro pill(color, shape, size=56) -%}
+<svg class="pill pill-{{ color }}" viewBox="0 0 48 48" width="{{ size }}" height="{{ size }}" aria-hidden="true" focusable="false">
   {% if shape == 'oval' %}
   <ellipse cx="24" cy="24" rx="20" ry="12"/>
   {% elif shape == 'capsule' %}

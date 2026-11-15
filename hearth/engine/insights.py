@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 
 from .models import DoseStatus
+from .schedule import part_of_day
 
 #: A pattern is only reported when at least this many doses were missed.
 MIN_PATTERN_MISSES = 3
@@ -169,19 +170,8 @@ def _headline(adherence: Adherence, name: str) -> str:
     return ", ".join(parts) + "."
 
 
-def _part_of_day(moment: datetime) -> str:
-    hour = moment.hour
-    if 5 <= hour < 11:
-        return "morning"
-    if 11 <= hour < 17:
-        return "afternoon"
-    if 17 <= hour < 21:
-        return "evening"
-    return "night"
-
-
 def _time_of_day_pattern(missed: Sequence[DoseRecord]) -> Insight | None:
-    part, count = Counter(_part_of_day(r.scheduled_at) for r in missed).most_common(1)[0]
+    part, count = Counter(part_of_day(r.scheduled_at) for r in missed).most_common(1)[0]
     if count / len(missed) < 0.6:
         return None
     return Insight(

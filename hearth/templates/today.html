@@ -1,68 +1,91 @@
 {% extends "base.html" %}
 {% from "macros.html" import csrf, pill, status_chip %}
+{% from "icons.html" import icon %}
 {% block title %}Today{% endblock %}
 
-{% macro dose_card(view, can_log) %}
+{# One form per action, so every button works without JavaScript. #}
+{% macro action(view, name, label, style, hidden_suffix) -%}
+{% set occ = view.occurrence %}
+<form method="post" action="{{ url_for('today.record', slot_id=occ.slot.id, dose_date=occ.dose_date.isoformat(), action=name) }}">
+  {{ csrf() }}
+  <button type="submit" class="button {{ style }}">{{ label }}<span class="visually-hidden">{{ hidden_suffix }}</span></button>
+</form>
+{%- endmacro %}
+
+{% macro late_advice(med) -%}
+<p class="dose-advice">
+  {{ icon('alert') }}
+  <span><strong>If a dose is late:</strong>
+  {% if med.missed_dose_rule %}{{ med.missed_dose_rule }}
+  {% else %}check the label or ask your pharmacist. Do not take two doses together unless you have been told to.{% endif %}</span>
+</p>
+{%- endmacro %}
+
+{# A dose that needs doing now: big, with the main button first. #}
+{% macro now_card(view, can_log) %}
 {% set occ = view.occurrence %}
 {% set med = occ.medication %}
 {% set status = view.status.value %}
-<li class="dose dose-{{ status }}" id="dose-{{ occ.slot.id }}">
-  <div class="dose-main">
-    {{ pill(med.pill_color, med.pill_shape) }}
-    <div class="dose-text">
-      <h3>{{ med.name }} <span class="dose-amount">{{ med.dose }}</span></h3>
-      <p class="dose-when">
+<li class="now-card now-{{ status }}">
+  <div class="now-top">
+    {{ pill(med.pill_color, med.pill_shape, 80) }}
+    <div>
+      <h3 class="now-name">{{ med.name }} <span class="dose-amount">{{ med.dose }}</span></h3>
+      <p class="now-when">
+        {{ icon('clock') }}
         <time datetime="{{ occ.scheduled_at | machine }}">{{ occ.scheduled_at | clock }}</time>
-        {% if occ.slot.anchor != 'fixed' %}· {{ view.when_label }}{% endif %}
+        {% if occ.slot.anchor != 'fixed' %}<span>{{ view.when_label | lower }}</span>{% endif %}
       </p>
-      <p class="dose-look">
-        Looks like: {{ med.pill_color }} {{ med.pill_shape }}{% if med.instructions %} · {{ med.instructions }}{% endif %}
-      </p>
+      <p class="dose-look">{{ med.pill_color | capitalize }} {{ med.pill_shape }}{% if med.instructions %} · {{ med.instructions }}{% endif %}</p>
     </div>
     {{ status_chip(view.status) }}
   </div>
-
-  {% if status in ('late', 'missed') %}
-  <p class="dose-advice">
-    <strong>If a dose is late:</strong>
-    {% if med.missed_dose_rule %}{{ med.missed_dose_rule }}
-    {% else %}Check the label or ask your pharmacist. Do not take two doses together unless you have been told to.{% endif %}
-  </p>
+  {% if status == 'late' %}{{ late_advice(med) }}{% endif %}
+  {% if status == 'snoozed' %}
+  <p class="dose-log">{{ icon('bell') }}<span>Reminder set for {{ view.log.snoozed_until | clock }}.</span></p>
   {% endif %}
-
-  {% if view.log and status in ('taken', 'skipped') %}
-  <p class="dose-log">
-    Recorded at {{ view.log.acted_at | clock }}{% if view.log.acted_by %} by {{ names.get(view.log.acted_by, 'someone') }}{% endif %}.
-  </p>
-  {% elif status == 'snoozed' %}
-  <p class="dose-log">You asked to be reminded at {{ view.log.snoozed_until | clock }}.</p>
-  {% endif %}
-
   {% if can_log %}
-  <div class="dose-actions">
-    {% if status in ('taken', 'skipped') %}
-    <form method="post" action="{{ url_for('today.record', slot_id=occ.slot.id, dose_date=occ.dose_date.isoformat(), action='undo') }}">
-      {{ csrf() }}
-      <button type="submit" class="button button-quiet">Undo<span class="visually-hidden"> the record for {{ med.name }}</span></button>
-    </form>
-    {% else %}
-    <form method="post" action="{{ url_for('today.record', slot_id=occ.slot.id, dose_date=occ.dose_date.isoformat(), action='take') }}">
-      {{ csrf() }}
-      <button type="submit" class="button button-primary button-large">Took it<span class="visually-hidden">: {{ med.name }} {{ med.dose }}</span></button>
-    </form>
-    {% if status in ('due', 'late') %}
-    <form method="post" action="{{ url_for('today.record', slot_id=occ.slot.id, dose_date=occ.dose_date.isoformat(), action='snooze') }}">
-      {{ csrf() }}
-      <button type="submit" class="button button-secondary button-large">Remind me in 15 minutes<span class="visually-hidden"> about {{ med.name }}</span></button>
-    </form>
-    {% endif %}
-    <form method="post" action="{{ url_for('today.record', slot_id=occ.slot.id, dose_date=occ.dose_date.isoformat(), action='skip') }}">
-      {{ csrf() }}
-      <button type="submit" class="button button-quiet button-large">Skip this dose<span class="visually-hidden"> of {{ med.name }}</span></button>
-    </form>
-    {% endif %}
+  <div class="now-actions">
+    {{ action(view, 'take', 'I took it', 'button-primary button-huge', ': ' ~ med.name ~ ' ' ~ med.dose) }}
+    <div class="now-secondary">
+      {% if status != 'snoozed' %}{{ action(view, 'snooze', 'Remind me in 15 minutes', 'button-secondary button-large', ' about ' ~ med.name) }}{% endif %}
+      {{ action(view, 'skip', 'Skip this dose', 'button-quiet button-large', ' of ' ~ med.name) }}
+    </div>
   </div>
   {% endif %}
+</li>
+{% endmacro %}
+
+{# Every other dose today: one calm line each. #}
+{% macro dose_row(view, can_log) %}
+{% set occ = view.occurrence %}
+{% set med = occ.medication %}
+{% set status = view.status.value %}
+<li class="dose-row row-{{ status }}">
+  <time class="row-time" datetime="{{ occ.scheduled_at | machine }}">{{ occ.scheduled_at | clock }}</time>
+  {{ pill(med.pill_color, med.pill_shape, 44) }}
+  <div class="row-text">
+    <p class="row-name"><strong>{{ med.name }}</strong> {{ med.dose }}</p>
+    <p class="row-detail">
+      {% if status in ('taken', 'skipped') and view.log %}
+      {{ 'Taken' if status == 'taken' else 'Skipped' }} at {{ view.log.acted_at | clock }}{% if view.log.acted_by %} by {{ names.get(view.log.acted_by, 'someone') }}{% endif %}
+      {% else %}
+      {{ view.when_label }}{% if med.instructions %} · {{ med.instructions }}{% endif %}
+      {% endif %}
+    </p>
+  </div>
+  <div class="row-end">
+    {% if status == 'taken' %}<span class="chip chip-taken">{{ icon('check', 22) }}Taken</span>
+    {% else %}{{ status_chip(view.status) }}{% endif %}
+    {% if can_log %}
+      {% if status in ('taken', 'skipped') %}
+      {{ action(view, 'undo', 'Undo', 'button-quiet button-small', ' the record for ' ~ med.name) }}
+      {% else %}
+      {{ action(view, 'take', 'I took it', 'button-secondary button-small', ': ' ~ med.name ~ ' ' ~ med.dose) }}
+      {% endif %}
+    {% endif %}
+  </div>
+  {% if status == 'missed' %}{{ late_advice(med) }}{% endif %}
 </li>
 {% endmacro %}
 
@@ -70,18 +93,49 @@
 {% set is_owner = may('decide_changes') %}
 {% set can_log = may('log_doses') %}
 
-<div class="page-head">
+<div class="today-head">
   <div>
     <h1>{% if is_owner %}{{ greeting }}, {{ member.name.split(' ')[0] }}{% else %}{{ profile.elder_name }}’s day{% endif %}</h1>
-    <p class="lead">
-      <time datetime="{{ local_now | machine }}">{{ local_now | long_date }}</time>
-      {% if doses_today %}· <strong>{{ taken }} of {{ doses_today | length }}</strong> doses taken{% endif %}
-    </p>
+    <p class="today-date"><time datetime="{{ local_now | machine }}">{{ local_now | long_date }}</time></p>
   </div>
-  <button type="button" class="button button-secondary" data-speak="{{ spoken }}" hidden>
-    <span aria-hidden="true">🔊</span> Read this aloud
+  <button type="button" class="button button-secondary button-large" data-speak="{{ spoken }}" hidden>
+    {{ icon('speaker') }}<span>Read this to me</span>
   </button>
 </div>
+
+{% if total %}
+<div class="progress-box">
+  <p class="progress-text"><strong>{{ taken }} of {{ total }}</strong> medicines taken today</p>
+  <progress max="{{ total }}" value="{{ taken }}" aria-hidden="true">{{ taken }} of {{ total }}</progress>
+</div>
+{% endif %}
+
+{% if take_now %}
+<section aria-labelledby="now-heading" class="now-section">
+  <h2 id="now-heading">{{ icon('bell', 32) }}<span>Time to take now</span></h2>
+  <ul class="now-list">
+    {% for view in take_now %}{{ now_card(view, can_log) }}{% endfor %}
+  </ul>
+</section>
+{% elif total %}
+<section class="calm-card" aria-labelledby="calm-heading">
+  {{ icon('check', 48) }}
+  <div>
+    <h2 id="calm-heading">Nothing to take right now</h2>
+    {% if next_dose %}
+    {% set med = next_dose.occurrence.medication %}
+    <p>Next: <strong>{{ med.name }} {{ med.dose }}</strong> at <strong>{{ next_dose.occurrence.scheduled_at | clock }}</strong> ({{ next_dose.when_label | lower }}).</p>
+    {% else %}
+    <p>That is everything for today. Well done.</p>
+    {% endif %}
+  </div>
+</section>
+{% else %}
+<p class="empty">
+  No medicines are scheduled for today.
+  {% if may('propose_medication_changes') %}<a href="{{ url_for('medications.new') }}">Add a medicine</a>.{% endif %}
+</p>
+{% endif %}
 
 {% if pending %}
 <section class="card card-attention" aria-labelledby="pending-heading">
@@ -91,91 +145,78 @@
     <li><strong>{{ names.get(item.proposed_by, 'Someone') }}</strong> suggested: {{ summary }}.</li>
     {% endfor %}
   </ul>
-  <p>Nothing changes unless you approve it.</p>
-  <p><a class="button button-primary" href="{{ url_for('medications.requests_index') }}">Review {{ 'it' if pending | length == 1 else 'them' }}</a></p>
+  <p>Nothing changes unless you say yes.</p>
+  <p><a class="button button-primary button-large" href="{{ url_for('medications.requests_index') }}">Look at {{ 'it' if pending | length == 1 else 'them' }}</a></p>
 </section>
 {% endif %}
 
 {% for view in suggestions %}
 {% set s = view.suggestion %}
 <section class="card card-idea" aria-labelledby="idea-{{ loop.index }}">
-  <h2 id="idea-{{ loop.index }}">A suggestion for your routine</h2>
+  <h2 id="idea-{{ loop.index }}">A better time for your {{ view.label | lower }} medicines?</h2>
   <p>
-    Your <strong>{{ view.label | lower }}</strong> medicines are set for {{ s.current | clock }},
-    but over the last {{ s.samples }} times you took them closer to <strong>{{ s.suggested | clock }}</strong>.
-    Shall I move the reminders to match?
+    They are set for <strong>{{ s.current | clock }}</strong>, but you usually take them
+    around <strong>{{ s.suggested | clock }}</strong>. Shall I move the reminders to match?
   </p>
   <div class="button-row">
     <form method="post" action="{{ url_for('today.decide_suggestion') }}">
       {{ csrf() }}
       <input type="hidden" name="key" value="{{ s.key }}">
       <input type="hidden" name="decision" value="apply">
-      <button type="submit" class="button button-primary">Yes, move to {{ s.suggested | clock }}</button>
+      <button type="submit" class="button button-primary button-large">Yes, move to {{ s.suggested | clock }}</button>
     </form>
     <form method="post" action="{{ url_for('today.decide_suggestion') }}">
       {{ csrf() }}
       <input type="hidden" name="key" value="{{ s.key }}">
       <input type="hidden" name="decision" value="dismiss">
-      <button type="submit" class="button button-quiet">No, keep {{ s.current | clock }}</button>
+      <button type="submit" class="button button-quiet button-large">No, keep {{ s.current | clock }}</button>
     </form>
   </div>
 </section>
 {% endfor %}
 
-{% if carried_over %}
-<section aria-labelledby="carried-heading">
-  <h2 id="carried-heading">Still open from last night</h2>
-  <ul class="dose-list">
-    {% for view in carried_over %}{{ dose_card(view, can_log) }}{% endfor %}
+{% if day_parts %}
+<section aria-labelledby="day-heading">
+  <h2 id="day-heading">{{ 'The rest of your day' if is_owner else 'The rest of the day' }}</h2>
+  {% for part in day_parts %}
+  <h3 class="day-part">{{ icon(part.key, 32) }}<span>{{ part.label }}</span></h3>
+  <ul class="dose-rows">
+    {% for view in part.doses %}{{ dose_row(view, can_log) }}{% endfor %}
   </ul>
+  {% endfor %}
 </section>
 {% endif %}
 
-<section aria-labelledby="doses-heading">
-  <h2 id="doses-heading">Today’s medicines</h2>
-  {% if doses_today %}
-  <ul class="dose-list">
-    {% for view in doses_today %}{{ dose_card(view, can_log) }}{% endfor %}
-  </ul>
-  {% else %}
-  <p class="empty">
-    No medicines are scheduled for today.
-    {% if may('propose_medication_changes') %}<a href="{{ url_for('medications.new') }}">Add a medicine</a>.{% endif %}
-  </p>
-  {% endif %}
-</section>
-
 <div class="two-columns">
   <section class="card" aria-labelledby="visits-heading">
-    <h2 id="visits-heading">Appointments this week</h2>
+    <h2 id="visits-heading">{{ icon('calendar') }}<span>Doctor visits this week</span></h2>
     {% if visits %}
     <ul class="simple-list">
       {% for visit in visits %}
       <li>
         <strong>{{ visit.title }}</strong>{% if visit.doctor %} with {{ visit.doctor }}{% endif %}<br>
         <time datetime="{{ visit.starts_at | machine }}">{{ visit.starts_at | day_and_time }}</time><br>
-        <a href="{{ url_for('appointments.summary', appointment_id=visit.id) }}">Open the visit summary<span class="visually-hidden"> for {{ visit.title }}</span></a>
+        <a href="{{ url_for('appointments.summary', appointment_id=visit.id) }}">Summary to take along<span class="visually-hidden"> for {{ visit.title }}</span></a>
       </li>
       {% endfor %}
     </ul>
     {% else %}
     <p>Nothing in the next seven days.</p>
     {% endif %}
-    <p><a href="{{ url_for('appointments.index') }}">All appointments</a></p>
   </section>
 
   <section class="card" aria-labelledby="stock-heading">
-    <h2 id="stock-heading">Running low</h2>
+    <h2 id="stock-heading">{{ icon('pill') }}<span>Running low</span></h2>
     {% if refills %}
     <ul class="simple-list">
       {% for refill in refills %}
       <li>
         <strong>{{ refill.name }}</strong>: {{ refill.stock }} left,
-        {% if refill.days_left == 0 %}runs out today{% else %}about {{ refill.days_left }} day{{ '' if refill.days_left == 1 else 's' }} left{% endif %}.
+        {% if refill.days_left == 0 %}runs out today{% else %}about {{ refill.days_left }} day{{ '' if refill.days_left == 1 else 's' }}{% endif %}.
       </li>
       {% endfor %}
     </ul>
-    <p><a href="{{ url_for('medications.index') }}">Update stock after a refill</a></p>
+    <p><a href="{{ url_for('medications.index') }}">Add new stock after a refill</a></p>
     {% else %}
     <p>Nothing needs refilling in the next few days.</p>
     {% endif %}
@@ -184,9 +225,9 @@
 
 {% if may('write_journal') %}
 <section class="card" aria-labelledby="note-heading">
-  <h2 id="note-heading">Something for the doctor?</h2>
-  <p>Note a question or how you are feeling. It goes onto the summary for your next visit.</p>
-  <p><a class="button button-secondary" href="{{ url_for('insights.journal') }}">Write a note</a></p>
+  <h2 id="note-heading">{{ icon('notebook') }}<span>Something to tell the doctor?</span></h2>
+  <p>Write down a question or how you feel. It goes on the summary for the next visit.</p>
+  <p><a class="button button-secondary button-large" href="{{ url_for('insights.journal') }}">Write a note</a></p>
 </section>
 {% endif %}
 {% endblock %}

@@ -47,6 +47,34 @@
     });
   }
 
+  // --- Show the passcode while typing, if the person chooses to -----------
+  each("[data-reveal]", function (box) {
+    var input = document.getElementById(box.getAttribute("data-reveal"));
+    var toggle = box.querySelector("input[type=checkbox]");
+    if (!input || !toggle) {
+      return;
+    }
+    box.hidden = false;
+    toggle.addEventListener("change", function () {
+      input.type = toggle.checked ? "text" : "password";
+    });
+  });
+
+  // --- "More" menu: close on Escape or when clicking elsewhere --------------
+  each("details.more-menu", function (menu) {
+    document.addEventListener("click", function (event) {
+      if (menu.open && !menu.contains(event.target)) {
+        menu.open = false;
+      }
+    });
+    menu.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && menu.open) {
+        menu.open = false;
+        menu.querySelector("summary").focus();
+      }
+    });
+  });
+
   // --- Print ----------------------------------------------------------------
   each("[data-print]", function (button) {
     button.hidden = false;

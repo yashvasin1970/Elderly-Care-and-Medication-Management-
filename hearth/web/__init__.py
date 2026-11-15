@@ -109,7 +109,7 @@ def _template_context() -> dict[str, Any]:
         "may": lambda name: security.allowed(Permission(name)),
         "display": auth.read_display_preferences(),
         "text_sizes": auth.TEXT_SIZES,
-        "contrasts": auth.CONTRASTS,
+        "themes": auth.THEMES,
         "pending_count": pending_count,
         "circle_code": format_circle_code(profile.circle_code) if profile else "",
         "role_label": ROLE_LABELS[member.role] if member else "",
