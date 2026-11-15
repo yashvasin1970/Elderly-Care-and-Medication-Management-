@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Passcode for {{ person }}{% endblock %}
+
+{% block content %}
+<h1>{{ person ~ ' has been added' if is_new else 'New passcode for ' ~ person }}</h1>
+
+<section class="card card-highlight" aria-labelledby="details-heading">
+  <h2 id="details-heading">Give {{ person }} these two things</h2>
+  <dl class="facts">
+    <dt>Circle code</dt>
+    <dd><span class="big-code">{{ circle_code }}</span></dd>
+    <dt>Their passcode</dt>
+    <dd><span class="big-code">{{ passcode }}</span></dd>
+  </dl>
+  <p>
+    <strong>This passcode is shown only once.</strong> Hearth does not keep a readable copy, so
+    write it down or tell {{ person }} now. If it is lost, you can give them a new one from the Circle page.
+  </p>
+</section>
+
+<p><a class="button button-primary" href="{{ url_for('circle.index') }}">Done</a></p>
+{% endblock %}

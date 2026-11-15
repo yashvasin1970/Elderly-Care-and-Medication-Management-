@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "macros.html" import adherence_cell %}
+{% block title %}Care Weather{% endblock %}
+
+{% block content %}
+<h1>Care Weather</h1>
+<p class="lead">How the last seven days went, and what might help.</p>
+
+<section class="card weather weather-{{ report.weather.code }}" aria-labelledby="weather-heading">
+  <p class="weather-symbol" aria-hidden="true">{{ report.weather.symbol }}</p>
+  <div>
+    <h2 id="weather-heading">This week: {{ report.weather.label }}</h2>
+    <p>{{ report.headline }}</p>
+  </div>
+</section>
+
+<section aria-labelledby="patterns-heading">
+  <h2 id="patterns-heading">What stands out</h2>
+  <p class="muted">Based on the last {{ pattern_days }} days. These are simple counts, not medical advice.</p>
+  {% if report.insights %}
+  <ul class="insight-list">
+    {% for insight in report.insights %}
+    <li class="card">
+      <p><strong>{{ insight.message }}</strong></p>
+      <p>Idea: {{ insight.suggestion }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">Nothing stands out yet. Patterns appear once there is a little more history.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="days-heading">
+  <h2 id="days-heading">Day by day</h2>
+  {% if days %}
+  <table>
+    <caption class="visually-hidden">Doses taken on each of the last seven days</caption>
+    <thead>
+      <tr><th scope="col">Day</th><th scope="col">Taken</th><th scope="col">Missed</th><th scope="col">Skipped by choice</th></tr>
+    </thead>
+    <tbody>
+      {% for day, adherence in days.items() %}
+      <tr>
+        <th scope="row"><time datetime="{{ day | machine }}">{{ day | short_date }}</time></th>
+        <td>{{ adherence_cell(adherence) }}</td>
+        <td>{{ adherence.missed }}</td>
+        <td>{{ adherence.skipped }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No doses have been due in the last seven days.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="medicines-heading">
+  <h2 id="medicines-heading">Medicine by medicine</h2>
+  {% if per_medicine %}
+  <table>
+    <caption>Over the last {{ pattern_days }} days</caption>
+    <thead>
+      <tr><th scope="col">Medicine</th><th scope="col">Taken</th><th scope="col">Missed</th><th scope="col">Skipped by choice</th></tr>
+    </thead>
+    <tbody>
+      {% for name, adherence in per_medicine.items() %}
+      <tr>
+        <th scope="row">{{ name }}</th>
+        <td>{{ adherence_cell(adherence) }}</td>
+        <td>{{ adherence.missed }}</td>
+        <td>{{ adherence.skipped }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">No history yet.</p>
+  {% endif %}
+</section>
+
+<section aria-labelledby="refill-heading">
+  <h2 id="refill-heading">Refill forecast</h2>
+  {% if refills %}
+  <table>
+    <caption class="visually-hidden">When each medicine will run out</caption>
+    <thead>
+      <tr><th scope="col">Medicine</th><th scope="col">Left</th><th scope="col">Runs out</th><th scope="col">Status</th></tr>
+    </thead>
+    <tbody>
+      {% for refill in refills %}
+      <tr>
+        <th scope="row">{{ refill.name }}</th>
+        <td>{{ refill.stock }}</td>
+        <td><time datetime="{{ refill.runs_out_on | machine }}">{{ refill.runs_out_on | short_date }}</time> (about {{ refill.days_left }} day{{ '' if refill.days_left == 1 else 's' }})</td>
+        <td>{% if refill.needs_refill %}<strong class="warning-text">Time to refill</strong>{% else %}Fine for now{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="empty">Stock is not being tracked for any medicine. Add a count on a medicine to get a forecast.</p>
+  {% endif %}
+</section>
+{% endblock %}

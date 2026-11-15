@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, field, textarea, error_summary %}
+{% block title %}{{ 'Change an appointment' if appointment else 'Add an appointment' }}{% endblock %}
+
+{% block content %}
+<h1>{{ 'Change an appointment' if appointment else 'Add an appointment' }}</h1>
+
+{{ error_summary(errors) }}
+
+<form method="post" class="card form"
+      action="{{ url_for('appointments.edit', appointment_id=appointment.id) if appointment else url_for('appointments.new') }}">
+  {{ csrf() }}
+  {{ field('title', 'What is it for?', values, errors, required=True, maxlength=100, hint='For example: heart check-up, eye test, blood test.') }}
+  {{ field('starts_at', 'Date and time', values, errors, type='datetime-local', required=True,
+           hint='In ' ~ profile.elder_name ~ '’s local time (' ~ profile.timezone | replace('_', ' ') ~ ').') }}
+  {{ field('doctor', 'Doctor or clinic', values, errors, maxlength=80) }}
+  {{ field('location', 'Where', values, errors, maxlength=120) }}
+  {{ textarea('notes', 'Anything to remember', values, errors, maxlength=500, hint='For example: bring the blood sugar diary, do not eat beforehand.') }}
+
+  <button type="submit" class="button button-primary button-large">Save appointment</button>
+  <a class="button button-quiet" href="{{ url_for('appointments.index') }}">Cancel</a>
+</form>
+{% endblock %}

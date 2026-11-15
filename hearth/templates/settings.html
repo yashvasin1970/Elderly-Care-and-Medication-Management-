@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, field, checkbox, notes, describedby, error_summary %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<h1>Settings</h1>
+
+{{ error_summary(errors) }}
+
+<form method="post" action="{{ url_for('circle.settings') }}" class="card form">
+  {{ csrf() }}
+  <h2>About you</h2>
+  {{ field('elder_name', 'Your name', values, errors, required=True, maxlength=60, autocomplete='name') }}
+  {{ field('email', 'Your email address', values, errors, type='email', maxlength=254, autocomplete='email',
+           hint='Your own reminders are sent here.') }}
+  {{ checkbox('receives_alerts', 'Email me reminders about my medicines and appointments', values) }}
+
+  <div class="field{% if errors.get('timezone') %} field-invalid{% endif %}">
+    <label for="timezone">Timezone</label>
+    {{ notes('timezone', None, errors) }}
+    <select id="timezone" name="timezone" required{{ describedby('timezone', None, errors) }}>
+      {% for zone in timezones %}
+      <option value="{{ zone }}"{% if values.get('timezone') == zone %} selected{% endif %}>{{ zone | replace('_', ' ') }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <fieldset>
+    <legend>Quiet check-in</legend>
+    {{ checkbox('checkin_enabled', 'Let my circle know if nothing has been recorded by a certain time', values,
+                hint='If no dose is confirmed and you have not opened Hearth by then, your family and caretakers get one gentle email. No location, camera or tracking is involved.') }}
+    <div class="field{% if errors.get('checkin_hour') %} field-invalid{% endif %}">
+      <label for="checkin_hour">Check by</label>
+      {{ notes('checkin_hour', None, errors) }}
+      <select id="checkin_hour" name="checkin_hour"{{ describedby('checkin_hour', None, errors) }}>
+        {% for hour in range(6, 22) %}
+        <option value="{{ hour }}"{% if values.get('checkin_hour') == hour | string %} selected{% endif %}>
+          {{ hour % 12 or 12 }}:00 {{ 'AM' if hour < 12 else 'PM' }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+  </fieldset>
+
+  <button type="submit" class="button button-primary button-large">Save settings</button>
+</form>
+
+<form method="post" action="{{ url_for('circle.change_own_passcode') }}" class="card form">
+  {{ csrf() }}
+  <h2>Change my passcode</h2>
+  {{ field('current_passcode', 'Current passcode', {}, errors, type='password', required=True, autocomplete='current-password', maxlength=64) }}
+  {{ field('new_passcode', 'New passcode', {}, errors, type='password', required=True, autocomplete='new-password', maxlength=64,
+           hint='At least 6 characters.') }}
+  {{ field('new_passcode_again', 'Type the new passcode again', {}, errors, type='password', required=True, autocomplete='new-password', maxlength=64) }}
+  <button type="submit" class="button button-secondary">Change passcode</button>
+</form>
+{% endblock %}

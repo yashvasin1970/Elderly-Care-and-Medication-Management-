@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, error_summary %}
+{% block title %}Daily routine{% endblock %}
+
+{% block content %}
+<h1>Daily routine</h1>
+<p class="lead">
+  Medicines are tied to moments in the day, like “after breakfast”. Set when those moments
+  usually happen and every reminder tied to them moves along.
+</p>
+
+{% if suggestions %}
+<section class="card card-idea" aria-labelledby="learned-heading">
+  <h2 id="learned-heading">What Hearth has noticed</h2>
+  <ul class="simple-list">
+    {% for view in suggestions %}
+    {% set s = view.suggestion %}
+    <li>
+      <strong>{{ view.label }}</strong> is set for {{ s.current | clock }}, but doses are usually
+      confirmed around <strong>{{ s.suggested | clock }}</strong> (from the last {{ s.samples }} times).
+      {% if can_manage %}
+      <form method="post" action="{{ url_for('today.decide_suggestion') }}" class="inline-form">
+        {{ csrf() }}
+        <input type="hidden" name="key" value="{{ s.key }}">
+        <input type="hidden" name="decision" value="apply">
+        <button type="submit" class="button button-secondary">Move to {{ s.suggested | clock }}<span class="visually-hidden"> ({{ view.label }})</span></button>
+      </form>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if not can_manage %}<p class="muted">{{ profile.elder_name }} decides whether to move these.</p>{% endif %}
+</section>
+{% endif %}
+
+{{ error_summary(errors) }}
+
+<form method="post" action="{{ url_for('circle.routine') }}" class="card form">
+  {{ csrf() }}
+  <fieldset{% if not can_manage %} disabled{% endif %}>
+    <legend>{{ 'My usual day' if can_manage else profile.elder_name ~ '’s usual day' }}</legend>
+    {% for anchor, label in anchors %}
+    <div class="field{% if errors.get(anchor) %} field-invalid{% endif %}">
+      <label for="{{ anchor }}">{{ label }}</label>
+      {% if errors.get(anchor) %}<p class="error" id="{{ anchor }}-error"><strong>Please check:</strong> {{ errors[anchor] }}</p>{% endif %}
+      <input id="{{ anchor }}" name="{{ anchor }}" type="time" value="{{ values.get(anchor, '') }}" required
+             {%- if errors.get(anchor) %} aria-invalid="true" aria-describedby="{{ anchor }}-error"{% endif %}>
+    </div>
+    {% endfor %}
+  </fieldset>
+  {% if can_manage %}
+  <button type="submit" class="button button-primary button-large">Save my routine</button>
+  {% else %}
+  <p class="muted">Only {{ profile.elder_name }} can change the routine.</p>
+  {% endif %}
+</form>
+{% endblock %}

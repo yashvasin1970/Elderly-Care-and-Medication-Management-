@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, pill %}
+{% block title %}Medicines{% endblock %}
+
+{% block content %}
+{% set can_change = may('propose_medication_changes') %}
+<div class="page-head">
+  <h1>Medicines</h1>
+  {% if can_change %}
+  <a class="button button-primary" href="{{ url_for('medications.new') }}">Add a medicine</a>
+  {% endif %}
+</div>
+
+{% if can_change and needs_approval %}
+<p class="notice">
+  You can suggest changes here. {{ profile.elder_name }} sees each suggestion and decides whether to accept it.
+</p>
+{% endif %}
+
+{% if can_change %}
+<section class="card" aria-labelledby="sentence-heading">
+  <h2 id="sentence-heading">Add one by describing it</h2>
+  <form method="post" action="{{ url_for('medications.draft') }}">
+    {{ csrf() }}
+    <div class="field">
+      <label for="sentence">Describe the medicine in one sentence</label>
+      <p class="hint" id="sentence-hint">
+        For example: “Amlodipine 5 mg every morning after breakfast for 30 days”.
+        {% if ai_enabled %}Gemini reads the sentence; only this sentence is sent, nothing else about you.{% endif %}
+        You check everything before it is saved.
+      </p>
+      <input id="sentence" name="sentence" type="text" maxlength="300" required aria-describedby="sentence-hint">
+    </div>
+    <button type="submit" class="button button-secondary">Fill in the form for me</button>
+  </form>
+</section>
+{% endif %}
+
+{% if cards %}
+<ul class="medicine-list">
+  {% for card in cards %}
+  {% set med = card.medication %}
+  <li class="card medicine">
+    <div class="dose-main">
+      {{ pill(med.pill_color, med.pill_shape) }}
+      <div class="dose-text">
+        <h2>{{ med.name }} <span class="dose-amount">{{ med.dose }}</span></h2>
+        <p class="dose-look">Looks like: {{ med.pill_color }} {{ med.pill_shape }}</p>
+      </div>
+      <span class="chip chip-{{ med.criticality.value }}">{{ med.criticality.value | capitalize }}</span>
+    </div>
+
+    <dl class="facts">
+      <dt>When</dt>
+      <dd>{{ card.times | join('; ') }}{% if card.days and card.days != 'Every day' %} ({{ card.days }}){% endif %}</dd>
+      {% if med.instructions %}<dt>Instructions</dt><dd>{{ med.instructions }}</dd>{% endif %}
+      {% if med.missed_dose_rule %}<dt>If a dose is late</dt><dd>{{ med.missed_dose_rule }}</dd>{% endif %}
+      {% if med.end_date %}<dt>Until</dt><dd><time datetime="{{ med.end_date | machine }}">{{ med.end_date | long_date }}</time></dd>{% endif %}
+      <dt>In stock</dt>
+      <dd>
+        {% if card.forecast %}
+        {{ card.forecast.stock }} left, about {{ card.forecast.days_left }} day{{ '' if card.forecast.days_left == 1 else 's' }}
+        (until <time datetime="{{ card.forecast.runs_out_on | machine }}">{{ card.forecast.runs_out_on | short_date }}</time>).
+        {% if card.forecast.needs_refill %}<strong class="warning-text">Time to refill.</strong>{% endif %}
+        {% else %}
+        Not tracked
+        {% endif %}
+      </dd>
+    </dl>
+
+    {% if can_change %}
+    <div class="button-row">
+      <a class="button button-secondary" href="{{ url_for('medications.edit', medication_id=med.id) }}">Change<span class="visually-hidden"> {{ med.name }}</span></a>
+      <form method="post" action="{{ url_for('medications.restock', medication_id=med.id) }}" class="inline-form">
+        {{ csrf() }}
+        <label for="amount-{{ med.id }}">Refilled? Add</label>
+        <input id="amount-{{ med.id }}" name="amount" type="number" min="1" max="999" inputmode="numeric" class="input-small" required>
+        <button type="submit" class="button button-quiet">Add to stock<span class="visually-hidden"> of {{ med.name }}</span></button>
+      </form>
+      <form method="post" action="{{ url_for('medications.stop', medication_id=med.id) }}"
+            data-confirm="Stop {{ med.name }}? Its history is kept.">
+        {{ csrf() }}
+        <button type="submit" class="button button-danger">Stop<span class="visually-hidden"> {{ med.name }}</span></button>
+      </form>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">No medicines yet.</p>
+{% endif %}
+
+{% if stopped %}
+<details class="card">
+  <summary>Stopped medicines ({{ stopped | length }})</summary>
+  <ul class="simple-list">
+    {% for med in stopped %}<li>{{ med.name }} {{ med.dose }}</li>{% endfor %}
+  </ul>
+</details>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, field, checkbox, error_summary %}
+{% block title %}{{ 'Change access' if editing else 'Invite someone' }}{% endblock %}
+
+{% block content %}
+<h1>{{ 'Change ' ~ editing.name ~ '’s access' if editing else 'Invite someone to your circle' }}</h1>
+
+{{ error_summary(errors) }}
+
+<form method="post" class="card form"
+      action="{{ url_for('circle.edit', member_id=editing.id) if editing else url_for('circle.add') }}">
+  {{ csrf() }}
+  {{ field('name', 'Their name', values, errors, required=True, maxlength=60, autocomplete='off') }}
+  {{ field('email', 'Their email address', values, errors, type='email', maxlength=254, autocomplete='off',
+           hint='Needed only if they should get reminder and alert emails.') }}
+
+  <fieldset{% if errors.get('role') %} class="field-invalid" aria-describedby="role-error"{% endif %}>
+    <legend>What can they do?</legend>
+    {% if errors.get('role') %}<p class="error" id="role-error"><strong>Please check:</strong> {{ errors['role'] }}</p>{% endif %}
+    {% for role, label, description in roles %}
+    <div class="check">
+      <input type="radio" id="role-{{ role.value }}" name="role" value="{{ role.value }}"
+             aria-describedby="role-{{ role.value }}-hint"{% if values.get('role') == role.value %} checked{% endif %}>
+      <label for="role-{{ role.value }}">{{ label }}</label>
+      <p class="hint" id="role-{{ role.value }}-hint">{{ description }}</p>
+    </div>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset>
+    <legend>Your choices for this person</legend>
+    {{ checkbox('receives_alerts', 'Send them reminder and alert emails', values,
+                hint='They hear about late doses of your critical and important medicines, appointments and the weekly summary.') }}
+    {{ checkbox('trusted_editor', 'Let them change my medicines without asking me first', values,
+                hint='Leave this off and every change they suggest waits for your approval. Applies to caretakers and family only.') }}
+  </fieldset>
+
+  {% if not editing %}
+  {{ field('passcode', 'Passcode for them', values, errors, maxlength=64, autocomplete='off',
+           hint='Leave empty and Hearth will create a strong one for you to pass on.') }}
+  {% endif %}
+
+  <button type="submit" class="button button-primary button-large">{{ 'Save changes' if editing else 'Add to my circle' }}</button>
+  <a class="button button-quiet" href="{{ url_for('circle.index') }}">Cancel</a>
+</form>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Sign in{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>A care circle <em>you</em> are in charge of</h1>
+  <p class="lead">
+    Hearth helps you keep on top of your medicines and doctor visits, and keeps the people
+    who care about you in the loop. You decide who sees what, and nothing about your
+    medicines changes without your say-so.
+  </p>
+</div>
+
+<div class="two-columns">
+  <section class="card" aria-labelledby="sign-in-heading">
+    <h2 id="sign-in-heading">Sign in to your circle</h2>
+    {% if error %}
+    <p class="flash flash-error" role="alert">{{ error }}</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('auth.sign_in') }}">
+      {{ csrf() }}
+      <div class="field">
+        <label for="circle_code">Circle code</label>
+        <p class="hint" id="circle_code-hint">Eight letters and numbers, like ABCD-2345.</p>
+        <input id="circle_code" name="circle_code" type="text" value="{{ circle_code }}" required
+               autocomplete="username" autocapitalize="characters" spellcheck="false"
+               maxlength="12" aria-describedby="circle_code-hint">
+      </div>
+      <div class="field">
+        <label for="passcode">Your passcode</label>
+        <input id="passcode" name="passcode" type="password" required
+               autocomplete="current-password" maxlength="64">
+      </div>
+      <button type="submit" class="button button-primary button-large">Sign in</button>
+    </form>
+  </section>
+
+  <section class="card" aria-labelledby="start-heading">
+    <h2 id="start-heading">New here?</h2>
+    <p>Set up a circle for yourself, or sit with a parent and set one up together.</p>
+    <p><a class="button button-secondary" href="{{ url_for('auth.start') }}">Create a care circle</a></p>
+
+    {% if demo_logins %}
+    <h3>Try the example circle</h3>
+    <p>Circle code: <strong class="code">{{ demo_code }}</strong></p>
+    <table class="plain-table">
+      <caption class="visually-hidden">Example sign-in details</caption>
+      <thead><tr><th scope="col">Sign in as</th><th scope="col">Passcode</th></tr></thead>
+      <tbody>
+        {% for who, passcode in demo_logins %}
+        <tr><th scope="row">{{ who }}</th><td><span class="code">{{ passcode }}</span></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% endif %}
+  </section>
+</div>
+
+<section aria-labelledby="how-heading" class="how">
+  <h2 id="how-heading">How Hearth is different</h2>
+  <ul class="feature-list">
+    <li>
+      <h3>You have the final say</h3>
+      <p>When someone suggests a change to your medicines, you see exactly what would change and approve or decline it.</p>
+    </li>
+    <li>
+      <h3>Reminders that fit your day</h3>
+      <p>Doses are tied to your routine, like “after breakfast”. Hearth notices when your routine shifts and offers to move with it.</p>
+    </li>
+    <li>
+      <h3>You are always told first</h3>
+      <p>Family and caretakers are only alerted if a dose stays unconfirmed, and only for the medicines you mark as important.</p>
+    </li>
+    <li>
+      <h3>Ready for the doctor</h3>
+      <p>Before each appointment, Hearth prepares a one-page summary with your own questions on it.</p>
+    </li>
+  </ul>
+</section>
+{% endblock %}

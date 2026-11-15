@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, textarea, error_summary %}
+{% block title %}Journal{% endblock %}
+
+{% block content %}
+<h1>Journal</h1>
+<p class="lead">
+  Questions for the doctor, how {{ 'you are' if may('decide_changes') else profile.elder_name ~ ' is' }} feeling,
+  and notes from the circle. Everything here appears on the next visit summary.
+</p>
+
+{% if can_write %}
+{{ error_summary(errors) }}
+<form method="post" action="{{ url_for('insights.journal') }}" class="card form">
+  {{ csrf() }}
+  <fieldset{% if errors.get('kind') %} class="field-invalid" aria-describedby="kind-error"{% endif %}>
+    <legend>What would you like to note?</legend>
+    {% if errors.get('kind') %}<p class="error" id="kind-error"><strong>Please check:</strong> {{ errors['kind'] }}</p>{% endif %}
+    {% for value, label in [('question', 'A question for the doctor'), ('symptom', 'A symptom or how I feel'), ('note', 'A general note')] %}
+    <div class="check">
+      <input type="radio" id="kind-{{ value }}" name="kind" value="{{ value }}"{% if values.get('kind', 'question') == value %} checked{% endif %}>
+      <label for="kind-{{ value }}">{{ label }}</label>
+    </div>
+    {% endfor %}
+  </fieldset>
+  {{ textarea('body', 'Your note', values, errors, required=True, maxlength=1000, rows=4) }}
+  <button type="submit" class="button button-primary">Save note</button>
+</form>
+{% endif %}
+
+<section aria-labelledby="entries-heading">
+  <h2 id="entries-heading">Recent notes</h2>
+  {% if entries %}
+  <ul class="journal-list">
+    {% for entry in entries %}
+    <li class="card">
+      <p>
+        <span class="chip chip-{{ entry.kind }}">{{ {'question': 'Question', 'symptom': 'Symptom', 'note': 'Note'}[entry.kind] }}</span>
+        <span class="muted">{{ names.get(entry.member_id, 'Someone') }},
+          <time datetime="{{ entry.created_at | machine }}">{{ entry.created_at | day_and_time }}</time></span>
+      </p>
+      <p class="journal-body">{{ entry.body }}</p>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">Nothing has been noted yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

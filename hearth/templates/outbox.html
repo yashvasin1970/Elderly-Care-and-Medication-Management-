@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Outbox{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>Outbox</h1>
+  <form method="post" action="{{ url_for('insights.check_now') }}">
+    {{ csrf() }}
+    <button type="submit" class="button button-secondary">Check for reminders now</button>
+  </form>
+</div>
+<p class="lead">Every email Hearth has sent for this circle, so nothing is said behind anyone’s back.</p>
+
+{% if not sending_for_real %}
+<p class="notice">
+  <strong>Demo mode:</strong> no email server is set up, so messages are recorded here instead of being sent.
+</p>
+{% endif %}
+
+{% if notifications %}
+<ul class="outbox-list">
+  {% for note in notifications %}
+  <li class="card">
+    <details>
+      <summary>
+        <span class="outbox-subject">{{ note.subject }}</span>
+        <span class="muted">
+          To {{ note.recipient }} ·
+          <time datetime="{{ note.created_at | machine }}">{{ note.created_at | day_and_time }}</time> ·
+          {{ {'sent': 'Sent', 'outbox': 'Recorded (demo mode)', 'failed': 'Could not be sent', 'queued': 'Waiting'}[note.status] }}
+        </span>
+      </summary>
+      <pre class="email-body">{{ note.body }}</pre>
+      {% if note.status == 'failed' and note.error %}<p class="error">{{ note.error }}</p>{% endif %}
+    </details>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="empty">No emails yet. They appear here as doses and appointments come due.</p>
+{% endif %}
+{% endblock %}

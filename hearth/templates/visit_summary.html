@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% from "macros.html" import adherence_cell %}
+{% block title %}Visit summary: {{ appointment.title }}{% endblock %}
+
+{% macro journal_list(entries, empty) %}
+{% if entries %}
+<ul class="simple-list">
+  {% for entry in entries %}
+  <li>
+    {{ entry.body }}
+    <span class="muted">({{ names.get(entry.member_id, 'someone') }}, <time datetime="{{ entry.created_at | machine }}">{{ entry.created_at | short_date }}</time>)</span>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">{{ empty }}</p>
+{% endif %}
+{% endmacro %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Visit summary for {{ profile.elder_name }}</h1>
+    <p class="lead">
+      {{ appointment.title }}{% if appointment.doctor %} with {{ appointment.doctor }}{% endif %},
+      <time datetime="{{ appointment.starts_at | machine }}">{{ appointment.starts_at | long_date }} at {{ appointment.starts_at | clock }}</time>
+    </p>
+  </div>
+  <button type="button" class="button button-secondary no-print" data-print hidden>Print this page</button>
+</div>
+
+<p>
+  Covers <time datetime="{{ period_start | machine }}">{{ period_start | long_date }}</time>
+  to <time datetime="{{ period_end | machine }}">{{ period_end | long_date }}</time>{% if previous %}
+  (since the last visit, {{ previous.title }}){% endif %}.
+  This page is a record kept by {{ profile.elder_name }} and their circle. It is not medical advice.
+</p>
+
+<section aria-labelledby="questions-heading" class="card card-highlight">
+  <h2 id="questions-heading">Questions to ask</h2>
+  {{ journal_list(questions, 'No questions have been noted yet. Add them in the Journal.') }}
+</section>
+
+<section aria-labelledby="taking-heading">
+  <h2 id="taking-heading">How medicines were taken</h2>
+  {% if overall.total %}
+  <p>
+    Overall: <strong>{{ overall.taken }} of {{ overall.total }}</strong> doses taken ({{ overall.rate }}%),
+    {{ overall.missed }} missed, {{ overall.skipped }} skipped by choice.
+  </p>
+  <table>
+    <caption>By medicine</caption>
+    <thead>
+      <tr><th scope="col">Medicine</th><th scope="col">Taken</th><th scope="col">Missed</th><th scope="col">Skipped by choice</th></tr>
+    </thead>
+    <tbody>
+      {% for name, adherence in per_medicine.items() %}
+      <tr>
+        <th scope="row">{{ name }}</th>
+        <td>{{ adherence_cell(adherence) }}</td>
+        <td>{{ adherence.missed }}</td>
+        <td>{{ adherence.skipped }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No doses were scheduled in this period.</p>
+  {% endif %}
+
+  {% if missed %}
+  <h3>Missed doses</h3>
+  <ul class="simple-list columns">
+    {% for record in missed %}
+    <li>{{ record.medication_name }}, <time datetime="{{ record.scheduled_at | machine }}">{{ record.scheduled_at | day_and_time }}</time></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+</section>
+
+<section aria-labelledby="symptoms-heading">
+  <h2 id="symptoms-heading">How {{ profile.elder_name }} has been feeling</h2>
+  {{ journal_list(symptoms, 'Nothing has been noted.') }}
+</section>
+
+<section aria-labelledby="notes-heading">
+  <h2 id="notes-heading">Notes from the circle</h2>
+  {{ journal_list(notes, 'Nothing has been noted.') }}
+</section>
+
+<section aria-labelledby="list-heading">
+  <h2 id="list-heading">Current medicines</h2>
+  {% if medicines %}
+  <table>
+    <caption class="visually-hidden">Current medicines and when they are taken</caption>
+    <thead>
+      <tr><th scope="col">Medicine</th><th scope="col">Dose</th><th scope="col">When</th><th scope="col">Instructions</th></tr>
+    </thead>
+    <tbody>
+      {% for med, times, days in medicines %}
+      <tr>
+        <th scope="row">{{ med.name }}</th>
+        <td>{{ med.dose }}</td>
+        <td>{{ times | join('; ') }}{% if days and days != 'Every day' %} ({{ days }}){% endif %}</td>
+        <td>{{ med.instructions or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No medicines are listed.</p>
+  {% endif %}
+</section>
+
+<p class="no-print"><a href="{{ url_for('appointments.index') }}">Back to appointments</a></p>
+{% endblock %}

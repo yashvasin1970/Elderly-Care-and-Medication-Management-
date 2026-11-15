@@ -1,0 +1,1131 @@
+/* Hearth stylesheet.
+ *
+ * Built for older eyes and hands first: large type, strong contrast, big
+ * targets, and nothing that relies on colour alone. Colours are tokens, so
+ * dark mode and the high-contrast setting only swap the token values.
+ */
+
+/* ---- Tokens ----------------------------------------------------------- */
+
+:root {
+  --bg: #fbf7f1;
+  --surface: #ffffff;
+  --text: #1f1a17;
+  --muted: #564b42;
+  --line: #ddd2c4;
+  --border: #7d6e5f;
+  --primary: #9a3412;
+  --primary-strong: #7c2d12;
+  --on-primary: #ffffff;
+  --focus: #1d4ed8;
+  --good: #14532d;
+  --good-bg: #dcfce7;
+  --warn: #7c2d12;
+  --warn-bg: #fef3c7;
+  --bad: #991b1b;
+  --bad-bg: #fee2e2;
+  --info: #1e3a8a;
+  --info-bg: #dbeafe;
+  --radius: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #171412;
+    --surface: #231e1a;
+    --text: #f4ede4;
+    --muted: #cdc1b3;
+    --line: #40372f;
+    --border: #a39483;
+    --primary: #fdba74;
+    --primary-strong: #fed7aa;
+    --on-primary: #1f1a17;
+    --focus: #93c5fd;
+    --good: #86efac;
+    --good-bg: #14321f;
+    --warn: #fcd34d;
+    --warn-bg: #3a2a0a;
+    --bad: #fca5a5;
+    --bad-bg: #401515;
+    --info: #bfdbfe;
+    --info-bg: #172a52;
+  }
+}
+
+/* High contrast: chosen in "Make this easier to read". */
+.contrast-high {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --text: #000000;
+  --muted: #000000;
+  --line: #000000;
+  --border: #000000;
+  --primary: #000000;
+  --primary-strong: #1f1f1f;
+  --on-primary: #ffffff;
+  --focus: #b91c1c;
+  --good: #000000;
+  --good-bg: #ffffff;
+  --warn: #000000;
+  --warn-bg: #ffffff;
+  --bad: #000000;
+  --bad-bg: #ffffff;
+  --info: #000000;
+  --info-bg: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .contrast-high {
+    --bg: #000000;
+    --surface: #000000;
+    --text: #ffffff;
+    --muted: #ffffff;
+    --line: #ffffff;
+    --border: #ffffff;
+    --primary: #ffffff;
+    --primary-strong: #e5e5e5;
+    --on-primary: #000000;
+    --focus: #fde047;
+    --good: #ffffff;
+    --good-bg: #000000;
+    --warn: #ffffff;
+    --warn-bg: #000000;
+    --bad: #ffffff;
+    --bad-bg: #000000;
+    --info: #ffffff;
+    --info-bg: #000000;
+  }
+}
+
+/* ---- Base ------------------------------------------------------------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 112.5%; /* 18px: a comfortable default for older readers */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+html.size-large {
+  font-size: 131.25%;
+}
+
+html.size-larger {
+  font-size: 150%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.wrap {
+  width: min(100% - 2rem, 62rem);
+  margin-inline: auto;
+}
+
+main {
+  padding-block: 1.5rem 3rem;
+}
+
+main:focus {
+  outline: none;
+}
+
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  margin: 0 0 0.5rem;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 2rem;
+}
+
+h2 {
+  font-size: 1.4rem;
+  margin-top: 1.75rem;
+}
+
+h3 {
+  font-size: 1.15rem;
+}
+
+.card > h2:first-child,
+.card > h3:first-child,
+section > h2:first-child {
+  margin-top: 0;
+}
+
+p,
+ul,
+ol,
+dl,
+table {
+  margin: 0 0 1rem;
+}
+
+p,
+li {
+  max-width: 68ch;
+}
+
+a {
+  color: var(--primary);
+  text-decoration-thickness: 0.09em;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: var(--primary-strong);
+  text-decoration-thickness: 0.16em;
+}
+
+:focus-visible {
+  outline: 0.2rem solid var(--focus);
+  outline-offset: 0.2rem;
+  border-radius: 0.25rem;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -10rem;
+  z-index: 10;
+  padding: 0.75rem 1.25rem;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-weight: 700;
+  border-radius: var(--radius);
+}
+
+.skip-link:focus {
+  top: 1rem;
+  color: var(--on-primary);
+}
+
+.lead {
+  font-size: 1.2rem;
+}
+
+.muted,
+.hint,
+.small-print {
+  color: var(--muted);
+}
+
+.small-print {
+  font-size: 0.9rem;
+}
+
+.empty {
+  padding: 1.25rem;
+  border: 0.125rem dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.warning-text {
+  color: var(--bad);
+}
+
+.code,
+.big-code {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, "Liberation Mono", monospace;
+  letter-spacing: 0.06em;
+}
+
+.code {
+  padding: 0.1rem 0.4rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: 0.3rem;
+  background: var(--surface);
+}
+
+.big-code {
+  display: inline-block;
+  font-size: 1.7rem;
+  font-weight: 700;
+}
+
+/* ---- Header and navigation -------------------------------------------- */
+
+.site-header {
+  background: var(--surface);
+  border-bottom: 0.0625rem solid var(--line);
+}
+
+.header-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  padding-block: 0.75rem;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.who {
+  flex: 1 1 14rem;
+  margin: 0;
+  line-height: 1.35;
+}
+
+.who span {
+  display: block;
+}
+
+.who-circle {
+  font-weight: 700;
+}
+
+.who-member {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.main-nav ul,
+.more-nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.main-nav a,
+.more-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: var(--radius);
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.main-nav a:hover,
+.more-nav a:hover {
+  text-decoration: underline;
+}
+
+.main-nav a[aria-current="page"],
+.more-nav a[aria-current="page"] {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.more-nav {
+  padding-bottom: 0.5rem;
+}
+
+.more-nav a {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.count {
+  margin-left: 0.4rem;
+  padding: 0 0.5rem;
+  border-radius: 999px;
+  background: var(--warn-bg);
+  color: var(--warn);
+  border: 0.0625rem solid currentColor;
+  font-weight: 700;
+}
+
+/* ---- Buttons ---------------------------------------------------------- */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 3rem;
+  padding: 0.5rem 1.2rem;
+  border: 0.125rem solid transparent;
+  border-radius: var(--radius);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.button-large {
+  min-height: 3.5rem;
+  padding-inline: 1.5rem;
+  font-size: 1.1rem;
+}
+
+.button-primary {
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+.button-primary:hover {
+  background: var(--primary-strong);
+  color: var(--on-primary);
+}
+
+.button-secondary {
+  background: var(--surface);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.button-secondary:hover {
+  border-color: var(--primary-strong);
+  color: var(--primary-strong);
+}
+
+.button-quiet {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.button-quiet:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.button-danger {
+  background: transparent;
+  border-color: var(--bad);
+  color: var(--bad);
+}
+
+.button-danger:hover {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.button-row form,
+.page-head form {
+  margin: 0;
+}
+
+/* ---- Layout pieces ---------------------------------------------------- */
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.page-head h1,
+.page-head .lead {
+  margin-bottom: 0.25rem;
+}
+
+.two-columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.two-columns > .card {
+  margin-bottom: 0;
+}
+
+.card {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  background: var(--surface);
+  border: 0.0625rem solid var(--line);
+  border-radius: 1rem;
+}
+
+.card > :last-child {
+  margin-bottom: 0;
+}
+
+.card-attention {
+  border-left: 0.5rem solid var(--warn);
+}
+
+.card-idea {
+  border-left: 0.5rem solid var(--info);
+}
+
+.card-highlight {
+  border: 0.1875rem solid var(--primary);
+}
+
+.notice {
+  padding: 0.9rem 1.1rem;
+  border-left: 0.5rem solid var(--info);
+  border-radius: var(--radius);
+  background: var(--info-bg);
+  color: var(--info);
+  max-width: none;
+}
+
+.hero {
+  padding-block: 1rem 0.5rem;
+}
+
+.hero h1 {
+  font-size: 2.3rem;
+  max-width: 22ch;
+}
+
+.feature-list,
+.dose-list,
+.medicine-list,
+.request-list,
+.insight-list,
+.journal-list,
+.outbox-list {
+  margin: 0 0 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.feature-list li,
+.dose-list li,
+.medicine-list li,
+.request-list li,
+.insight-list li,
+.journal-list li,
+.outbox-list li {
+  max-width: none;
+}
+
+.feature-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 1.25rem;
+}
+
+.simple-list {
+  padding-left: 1.25rem;
+}
+
+.simple-list li {
+  margin-bottom: 0.5rem;
+}
+
+.columns {
+  columns: 16rem 2;
+}
+
+.steps li {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: minmax(7rem, max-content) 1fr;
+  gap: 0.4rem 1rem;
+}
+
+.facts dt {
+  font-weight: 700;
+}
+
+.facts dd {
+  margin: 0;
+}
+
+/* ---- Messages --------------------------------------------------------- */
+
+.flash {
+  max-width: none;
+  padding: 0.9rem 1.1rem;
+  border-left: 0.5rem solid currentColor;
+  border-radius: var(--radius);
+  font-weight: 600;
+}
+
+.flash-success {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.flash-info {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.flash-error {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.error-summary {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 0.1875rem solid var(--bad);
+  border-radius: var(--radius);
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.error-summary h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.error-summary ul {
+  margin-bottom: 0;
+}
+
+/* ---- Forms ------------------------------------------------------------ */
+
+.field {
+  margin-bottom: 1.1rem;
+}
+
+label,
+legend {
+  font-weight: 700;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.optional {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.hint {
+  margin: 0 0 0.35rem;
+  font-size: 0.95rem;
+}
+
+.error {
+  margin: 0 0 0.35rem;
+  padding-left: 0.6rem;
+  border-left: 0.3rem solid var(--bad);
+  color: var(--bad);
+  font-weight: 600;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  max-width: 32rem;
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  border: 0.125rem solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.field-invalid input,
+.field-invalid select,
+.field-invalid textarea {
+  border-color: var(--bad);
+  border-width: 0.1875rem;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1.6rem;
+  height: 1.6rem;
+  min-height: 0;
+  margin: 0.15rem 0 0;
+  padding: 0;
+  accent-color: var(--primary);
+}
+
+.check {
+  display: grid;
+  grid-template-columns: 1.6rem 1fr;
+  gap: 0.1rem 0.75rem;
+  align-items: start;
+  margin-bottom: 0.9rem;
+}
+
+.check label {
+  margin: 0;
+  padding-block: 0.15rem;
+  font-weight: 600;
+}
+
+.check .hint {
+  grid-column: 2;
+  margin: 0;
+}
+
+.check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 1.75rem;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem 0.4rem;
+  border: 0.0625rem solid var(--border);
+  border-radius: var(--radius);
+}
+
+legend {
+  padding-inline: 0.4rem;
+  font-size: 1.05rem;
+}
+
+.slot-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 0 1rem;
+}
+
+.inline-form {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+}
+
+.inline-form label {
+  margin: 0;
+}
+
+.input-small {
+  width: 6rem;
+}
+
+.form > .button {
+  margin: 0.25rem 0.5rem 0.25rem 0;
+}
+
+/* ---- Doses and medicines ---------------------------------------------- */
+
+.dose {
+  margin-bottom: 1rem;
+  padding: 1.1rem 1.25rem;
+  background: var(--surface);
+  border: 0.0625rem solid var(--line);
+  border-left: 0.6rem solid var(--border);
+  border-radius: 1rem;
+  scroll-margin-top: 1rem;
+}
+
+.dose-taken {
+  border-left-color: var(--good);
+}
+
+.dose-due,
+.dose-snoozed {
+  border-left-color: var(--primary);
+}
+
+.dose-late,
+.dose-missed {
+  border-left-color: var(--bad);
+}
+
+.dose-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.75rem 1rem;
+}
+
+.dose-text {
+  flex: 1 1 14rem;
+}
+
+.dose-text h2,
+.dose-text h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+
+.dose-amount {
+  font-weight: 500;
+}
+
+.dose-when {
+  margin: 0.15rem 0 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dose-look,
+.dose-log {
+  margin: 0.15rem 0 0;
+  color: var(--muted);
+}
+
+.dose-advice {
+  margin: 0.9rem 0 0;
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--warn-bg);
+  color: var(--warn);
+  max-width: none;
+}
+
+.dose-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.dose-actions form {
+  flex: 1 1 13rem;
+  margin: 0;
+}
+
+.dose-actions .button {
+  width: 100%;
+}
+
+/* A lone "Undo" stays modest; the big buttons are for doses still open. */
+.dose-actions form:only-child {
+  flex: 0 0 auto;
+}
+
+.medicine .facts {
+  margin-top: 1rem;
+}
+
+.pill {
+  flex: none;
+  fill: var(--pill-fill, #ffffff);
+  stroke: var(--text);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.pill-detail {
+  fill: none;
+  stroke: var(--text);
+  stroke-linecap: round;
+}
+
+.pill-white { --pill-fill: #ffffff; }
+.pill-yellow { --pill-fill: #fde047; }
+.pill-orange { --pill-fill: #fb923c; }
+.pill-pink { --pill-fill: #f9a8d4; }
+.pill-red { --pill-fill: #ef4444; }
+.pill-purple { --pill-fill: #a78bfa; }
+.pill-blue { --pill-fill: #60a5fa; }
+.pill-green { --pill-fill: #4ade80; }
+.pill-brown { --pill-fill: #a16207; }
+.pill-grey { --pill-fill: #9ca3af; }
+
+/* Status is always written in words; colour only reinforces it. */
+.chip {
+  display: inline-block;
+  padding: 0.15rem 0.75rem;
+  border: 0.0625rem solid currentColor;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.chip-taken {
+  background: var(--good-bg);
+  color: var(--good);
+}
+
+.chip-due,
+.chip-snoozed,
+.chip-question {
+  background: var(--info-bg);
+  color: var(--info);
+}
+
+.chip-late,
+.chip-missed,
+.chip-critical {
+  background: var(--bad-bg);
+  color: var(--bad);
+}
+
+.chip-important,
+.chip-symptom {
+  background: var(--warn-bg);
+  color: var(--warn);
+}
+
+/* ---- Tables ----------------------------------------------------------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+caption {
+  padding-bottom: 0.4rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+th,
+td {
+  padding: 0.6rem 0.75rem 0.6rem 0;
+  border-bottom: 0.0625rem solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  border-bottom: 0.125rem solid var(--border);
+}
+
+.plain-table {
+  width: auto;
+}
+
+meter {
+  width: 7rem;
+  height: 1rem;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+/* ---- Care Weather, journal, outbox ------------------------------------ */
+
+.weather {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.25rem;
+  border-left: 0.6rem solid var(--info);
+}
+
+.weather-sunny,
+.weather-fair {
+  border-left-color: var(--good);
+}
+
+.weather-cloudy {
+  border-left-color: var(--warn);
+}
+
+.weather-stormy {
+  border-left-color: var(--bad);
+}
+
+.weather-symbol {
+  margin: 0;
+  font-size: 3.2rem;
+  line-height: 1;
+}
+
+.weather h2 {
+  margin: 0 0 0.25rem;
+}
+
+.weather p:last-child {
+  margin: 0;
+}
+
+.journal-body,
+.email-body {
+  white-space: pre-wrap;
+}
+
+.email-body {
+  margin: 0.75rem 0 0;
+  padding: 1rem;
+  border: 0.0625rem solid var(--line);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font: inherit;
+  overflow-x: auto;
+}
+
+summary {
+  min-height: 2.75rem;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.outbox-subject {
+  display: block;
+}
+
+summary .muted {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 400;
+}
+
+/* ---- Footer ----------------------------------------------------------- */
+
+.site-footer {
+  padding-block: 1.5rem 2.5rem;
+  border-top: 0.0625rem solid var(--line);
+  background: var(--surface);
+}
+
+.display-form h2 {
+  margin-top: 0;
+  font-size: 1.1rem;
+}
+
+.display-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.display-options label {
+  margin: 0;
+}
+
+.display-options select {
+  width: auto;
+}
+
+/* ---- Small screens ---------------------------------------------------- */
+
+@media (max-width: 40rem) {
+  /* Keep "Sign out" beside the logo so the page content starts sooner. */
+  .header-row .who {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .header-row form {
+    margin-left: auto;
+  }
+
+  .main-nav ul,
+  .more-nav ul {
+    gap: 0;
+  }
+
+  .main-nav a {
+    padding-inline: 0.6rem;
+  }
+
+  .more-nav a {
+    min-height: 2.5rem;
+    padding-inline: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+}
+
+/* ---- Motion and print ------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  :root {
+    --bg: #ffffff;
+    --surface: #ffffff;
+    --text: #000000;
+    --muted: #333333;
+    --line: #999999;
+    --border: #666666;
+    --primary: #000000;
+  }
+
+  html {
+    font-size: 11pt;
+  }
+
+  .main-nav,
+  .more-nav,
+  .site-footer,
+  .flashes,
+  .skip-link,
+  .no-print,
+  .site-header form {
+    display: none !important;
+  }
+
+  .card {
+    break-inside: avoid;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+}

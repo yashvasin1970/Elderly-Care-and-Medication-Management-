@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, field, notes, describedby, error_summary %}
+{% block title %}Create a care circle{% endblock %}
+
+{% block content %}
+<h1>Create a care circle</h1>
+<p class="lead">
+  The circle belongs to the person whose health it is about. They will be its owner,
+  and they choose who else may join.
+</p>
+
+{{ error_summary(errors) }}
+
+<form method="post" action="{{ url_for('auth.start') }}" class="card form">
+  {{ csrf() }}
+  {{ field('elder_name', 'Name of the person this circle is for', values, errors, required=True, autocomplete='name', maxlength=60) }}
+  {{ field('email', 'Their email address', values, errors, type='email', autocomplete='email', maxlength=254,
+           hint='Reminders are sent here. Leave it empty to use Hearth without email.') }}
+
+  <div class="field{% if errors.get('timezone') %} field-invalid{% endif %}">
+    <label for="timezone">Timezone</label>
+    {{ notes('timezone', 'So reminders arrive at the right time of day.', errors) }}
+    <select id="timezone" name="timezone" required data-detect-timezone{{ describedby('timezone', True, errors) }}>
+      {% for zone in timezones %}
+      <option value="{{ zone }}"{% if values.get('timezone') == zone %} selected{% endif %}>{{ zone | replace('_', ' ') }}</option>
+      {% endfor %}
+    </select>
+  </div>
+
+  {{ field('passcode', 'Choose a passcode', values, errors, type='password', required=True, autocomplete='new-password', maxlength=64,
+           hint='At least 6 characters. Pick something you will remember but others cannot guess.') }}
+  {{ field('passcode_again', 'Type the passcode again', values, errors, type='password', required=True, autocomplete='new-password', maxlength=64) }}
+
+  <button type="submit" class="button button-primary button-large">Create the circle</button>
+  <a class="button button-quiet" href="{{ url_for('auth.home') }}">Cancel</a>
+</form>
+{% endblock %}

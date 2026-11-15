@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Circle{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <h1>{{ 'Your circle' if can_manage else profile.elder_name ~ '’s circle' }}</h1>
+  {% if can_manage %}
+  <a class="button button-primary" href="{{ url_for('circle.add') }}">Invite someone</a>
+  {% endif %}
+</div>
+<p class="lead">
+  {% if can_manage %}
+  You decide who is in your circle and what each person can do. You can remove anyone at any time.
+  {% else %}
+  {{ profile.elder_name }} decides who is in the circle and what each person can do.
+  {% endif %}
+</p>
+<p>Circle code: <strong class="code">{{ circle_code }}</strong></p>
+
+<ul class="medicine-list">
+  {% for person in members %}
+  <li class="card">
+    <h2>{{ person.name }}{% if person.id == member.id %} <span class="muted">(you)</span>{% endif %}</h2>
+    <p><span class="chip chip-role">{{ role_labels[person.role] }}</span></p>
+    <p>{{ role_descriptions[person.role] }}</p>
+    <ul class="simple-list">
+      {% if person.role.value in ('caretaker', 'family') %}
+      <li>
+        {% if person.trusted_editor %}Trusted: their medicine changes apply straight away.
+        {% else %}Their medicine changes need {{ 'your' if can_manage else profile.elder_name ~ '’s' }} approval first.{% endif %}
+      </li>
+      {% endif %}
+      {% if person.role.value != 'viewer' %}
+      <li>
+        {% if person.receives_alerts and person.email %}Gets reminder and alert emails.
+        {% elif person.receives_alerts %}No email address, so no emails are sent.
+        {% else %}Emails are switched off.{% endif %}
+      </li>
+      {% endif %}
+    </ul>
+
+    {% if can_manage and person.role.value != 'elder' %}
+    <div class="button-row">
+      <a class="button button-secondary" href="{{ url_for('circle.edit', member_id=person.id) }}">Change<span class="visually-hidden"> {{ person.name }}’s access</span></a>
+      <form method="post" action="{{ url_for('circle.new_passcode', member_id=person.id) }}"
+            data-confirm="Give {{ person.name }} a new passcode? Their old one stops working straight away.">
+        {{ csrf() }}
+        <button type="submit" class="button button-quiet">New passcode<span class="visually-hidden"> for {{ person.name }}</span></button>
+      </form>
+      <form method="post" action="{{ url_for('circle.remove', member_id=person.id) }}"
+            data-confirm="Remove {{ person.name }} from your circle? They lose access straight away.">
+        {{ csrf() }}
+        <button type="submit" class="button button-danger">Remove<span class="visually-hidden"> {{ person.name }}</span></button>
+      </form>
+    </div>
+    {% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}

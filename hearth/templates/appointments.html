@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Appointments{% endblock %}
+
+{% block content %}
+{% set can_manage = may('manage_appointments') %}
+<div class="page-head">
+  <h1>Appointments</h1>
+  {% if can_manage %}
+  <a class="button button-primary" href="{{ url_for('appointments.new') }}">Add an appointment</a>
+  {% endif %}
+</div>
+<p class="lead">Reminders go out the day before and two hours before each visit.</p>
+
+<section aria-labelledby="upcoming-heading">
+  <h2 id="upcoming-heading">Coming up</h2>
+  {% if upcoming %}
+  <ul class="medicine-list">
+    {% for visit in upcoming %}
+    <li class="card">
+      <h3>{{ visit.title }}</h3>
+      <dl class="facts">
+        <dt>When</dt>
+        <dd><time datetime="{{ visit.starts_at | machine }}">{{ visit.starts_at | long_date }} at {{ visit.starts_at | clock }}</time></dd>
+        {% if visit.doctor %}<dt>With</dt><dd>{{ visit.doctor }}</dd>{% endif %}
+        {% if visit.location %}<dt>Where</dt><dd>{{ visit.location }}</dd>{% endif %}
+        {% if visit.notes %}<dt>Notes</dt><dd>{{ visit.notes }}</dd>{% endif %}
+      </dl>
+      <div class="button-row">
+        <a class="button button-secondary" href="{{ url_for('appointments.summary', appointment_id=visit.id) }}">Visit summary<span class="visually-hidden"> for {{ visit.title }}</span></a>
+        {% if can_manage %}
+        <a class="button button-quiet" href="{{ url_for('appointments.edit', appointment_id=visit.id) }}">Change<span class="visually-hidden"> {{ visit.title }}</span></a>
+        <form method="post" action="{{ url_for('appointments.cancel', appointment_id=visit.id) }}"
+              data-confirm="Cancel {{ visit.title }}?">
+          {{ csrf() }}
+          <button type="submit" class="button button-danger">Cancel<span class="visually-hidden"> {{ visit.title }}</span></button>
+        </form>
+        {% endif %}
+      </div>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">No appointments are booked.</p>
+  {% endif %}
+</section>
+
+{% if past %}
+<section aria-labelledby="past-heading">
+  <h2 id="past-heading">Past visits</h2>
+  <ul class="simple-list">
+    {% for visit in past %}
+    <li>
+      <time datetime="{{ visit.starts_at | machine }}">{{ visit.starts_at | short_date }}</time>:
+      {{ visit.title }}{% if visit.doctor %} with {{ visit.doctor }}{% endif %}
+      (<a href="{{ url_for('appointments.summary', appointment_id=visit.id) }}">summary<span class="visually-hidden"> for {{ visit.title }} on {{ visit.starts_at | short_date }}</span></a>)
+    </li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %}
+{% endblock %}

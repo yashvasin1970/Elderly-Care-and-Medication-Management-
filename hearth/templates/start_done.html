@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Your circle is ready{% endblock %}
+
+{% block content %}
+<h1>Your circle is ready, {{ elder_name }}</h1>
+
+<section class="card card-highlight" aria-labelledby="code-heading">
+  <h2 id="code-heading">Your circle code</h2>
+  <p class="big-code">{{ new_circle_code }}</p>
+  <p>
+    Write this down and keep it somewhere safe. You need the circle code and your passcode
+    each time you sign in. Other people you invite use the same circle code with their own passcode.
+  </p>
+</section>
+
+<h2>What to do next</h2>
+<ol class="steps">
+  <li><a href="{{ url_for('medications.new') }}">Add your first medicine</a></li>
+  <li><a href="{{ url_for('circle.routine') }}">Tell Hearth your daily routine</a>, so reminders fit your day</li>
+  <li><a href="{{ url_for('circle.add') }}">Invite a family member or caretaker</a></li>
+</ol>
+<p><a class="button button-primary" href="{{ url_for('today.show') }}">Go to Today</a></p>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf, field, error_summary %}
+{% block title %}{{ 'Change a medicine' if medication_id else 'Add a medicine' }}{% endblock %}
+
+{% block content %}
+<h1>{{ 'Change a medicine' if medication_id else 'Add a medicine' }}</h1>
+
+{% if notice %}<p class="notice" role="status">{{ notice }}</p>{% endif %}
+{% if needs_approval %}
+<p class="notice">
+  This will be sent to {{ profile.elder_name }} as a suggestion. Nothing changes until they approve it.
+</p>
+{% endif %}
+
+{{ error_summary(errors) }}
+
+<form method="post" class="card form"
+      action="{{ url_for('medications.edit', medication_id=medication_id) if medication_id else url_for('medications.new') }}">
+  {{ csrf() }}
+
+  {{ field('name', 'Name of the medicine', values, errors, required=True, maxlength=80, hint='As written on the box or label.') }}
+  {{ field('dose', 'Dose', values, errors, maxlength=40, hint='For example 500 mg, 10 units or 1 tablet. Copy it from the label.') }}
+
+  <fieldset{% if errors.get('slots') %} class="field-invalid" aria-describedby="slots-error"{% endif %}>
+    <legend>When is it taken?</legend>
+    <p class="hint">Tie each dose to a part of the day, or choose an exact time. Use one row per dose.</p>
+    {% if errors.get('slots') %}<p class="error" id="slots-error"><strong>Please check:</strong> {{ errors['slots'] }}</p>{% endif %}
+    {% for index in range(max_slots) %}
+    {% set anchor = values.get('slot-' ~ index ~ '-anchor', '') %}
+    <div class="slot-row" data-slot-row>
+      <div class="field">
+        <label for="slot-{{ index }}-anchor">Dose {{ index + 1 }}</label>
+        <select id="slot-{{ index }}-anchor" name="slot-{{ index }}-anchor" data-slot-anchor>
+          <option value="">{{ 'Choose…' if index == 0 else 'Not needed' }}</option>
+          {% for value, label in anchor_choices %}
+          <option value="{{ value }}"{% if anchor == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field" data-slot-offset>
+        <label for="slot-{{ index }}-offset">How close to it<span class="visually-hidden"> (dose {{ index + 1 }})</span></label>
+        <select id="slot-{{ index }}-offset" name="slot-{{ index }}-offset">
+          {% for value, label in offset_choices %}
+          <option value="{{ value }}"{% if values.get('slot-' ~ index ~ '-offset', '0') == value | string %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field" data-slot-time>
+        <label for="slot-{{ index }}-time">Exact time<span class="visually-hidden"> (dose {{ index + 1 }})</span></label>
+        <input id="slot-{{ index }}-time" name="slot-{{ index }}-time" type="time" value="{{ values.get('slot-' ~ index ~ '-time', '') }}">
+      </div>
+    </div>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset{% if errors.get('days') %} class="field-invalid" aria-describedby="days-error"{% endif %}>
+    <legend>On which days?</legend>
+    {% if errors.get('days') %}<p class="error" id="days-error"><strong>Please check:</strong> {{ errors['days'] }}</p>{% endif %}
+    <div class="check-row">
+      {% for name in day_names %}
+      <div class="check">
+        <input type="checkbox" id="day-{{ loop.index0 }}" name="day-{{ loop.index0 }}" value="1"{% if values.get('day-' ~ loop.index0) %} checked{% endif %}>
+        <label for="day-{{ loop.index0 }}">{{ name }}</label>
+      </div>
+      {% endfor %}
+    </div>
+  </fieldset>
+
+  <fieldset{% if errors.get('criticality') %} class="field-invalid" aria-describedby="criticality-error"{% endif %}>
+    <legend>How important is it to take this on time?</legend>
+    <p class="hint">This decides who is told if a dose is late. You are always reminded first.</p>
+    {% if errors.get('criticality') %}<p class="error" id="criticality-error"><strong>Please check:</strong> {{ errors['criticality'] }}</p>{% endif %}
+    {% for value, label, description in criticality_choices %}
+    <div class="check">
+      <input type="radio" id="criticality-{{ value }}" name="criticality" value="{{ value }}"
+             aria-describedby="criticality-{{ value }}-hint"{% if values.get('criticality') == value %} checked{% endif %}>
+      <label for="criticality-{{ value }}">{{ label }}</label>
+      <p class="hint" id="criticality-{{ value }}-hint">{{ description }}</p>
+    </div>
+    {% endfor %}
+  </fieldset>
+
+  {{ field('instructions', 'How to take it', values, errors, maxlength=200, hint='For example: with food, or with a full glass of water.') }}
+  {{ field('missed_dose_rule', 'What the label says to do if a dose is missed', values, errors, maxlength=300,
+           hint='Copy this from the leaflet or ask the pharmacist. Hearth shows it when a dose is late and never makes up its own advice.') }}
+
+  <fieldset>
+    <legend>What does it look like?</legend>
+    <div class="slot-row">
+      <div class="field">
+        <label for="pill_color">Colour</label>
+        <select id="pill_color" name="pill_color">
+          {% for color in pill_colors %}
+          <option value="{{ color }}"{% if values.get('pill_color') == color %} selected{% endif %}>{{ color | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="pill_shape">Shape or type</label>
+        <select id="pill_shape" name="pill_shape">
+          {% for shape in pill_shapes %}
+          <option value="{{ shape }}"{% if values.get('pill_shape') == shape %} selected{% endif %}>{{ shape | capitalize }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Stock and course</legend>
+    <div class="slot-row">
+      {{ field('stock_count', 'How many are left', values, errors, type='number', inputmode='numeric', min=0, max=9999,
+               hint='Fill this in to get a reminder before it runs out.') }}
+      {{ field('units_per_dose', 'How many per dose', values, errors, type='number', inputmode='numeric', min=1, max=20, required=True) }}
+    </div>
+    <div class="slot-row">
+      {{ field('start_date', 'Start date', values, errors, type='date', required=True) }}
+      {{ field('end_date', 'End date', values, errors, type='date', hint='Leave empty if it is taken long term.') }}
+    </div>
+  </fieldset>
+
+  {% if needs_approval %}
+  {{ field('reason', 'Why are you suggesting this?', values, errors, maxlength=200,
+           hint=profile.elder_name ~ ' will see this next to your suggestion.') }}
+  {% endif %}
+
+  <button type="submit" class="button button-primary button-large">
+    {{ 'Send suggestion to ' ~ profile.elder_name if needs_approval else 'Save medicine' }}
+  </button>
+  <a class="button button-quiet" href="{{ url_for('medications.index') }}">Cancel</a>
+</form>
+{% endblock %}

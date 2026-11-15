@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "macros.html" import csrf %}
+{% block title %}Suggested changes{% endblock %}
+
+{% block content %}
+<h1>Suggested changes</h1>
+<p class="lead">
+  {% if can_decide %}
+  When someone suggests a change to your medicines, it waits here for you. Nothing changes unless you approve it.
+  {% else %}
+  Changes to {{ profile.elder_name }}’s medicines are {{ profile.elder_name }}’s decision. Suggestions wait here until they decide.
+  {% endif %}
+</p>
+
+<section aria-labelledby="waiting-heading">
+  <h2 id="waiting-heading">Waiting for a decision</h2>
+  {% if pending %}
+  <ul class="request-list">
+    {% for entry in pending %}
+    {% set item = entry.request %}
+    <li class="card card-attention">
+      <h3>{{ entry.proposer }} suggests: {{ entry.summary }}</h3>
+      <p class="muted">Suggested <time datetime="{{ item.created_at | machine }}">{{ item.created_at | day_and_time }}</time></p>
+      {% if item.reason %}<p><strong>Their reason:</strong> {{ item.reason }}</p>{% endif %}
+
+      {% if entry.changes %}
+      <table>
+        <caption>What would change</caption>
+        <thead>
+          <tr><th scope="col">Detail</th><th scope="col">Now</th><th scope="col">Suggested</th></tr>
+        </thead>
+        <tbody>
+          {% for change in entry.changes %}
+          <tr>
+            <th scope="row">{{ change.label }}</th>
+            <td>{{ change.before or '—' }}</td>
+            <td><strong>{{ change.after or '—' }}</strong></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% elif item.action == 'archive' %}
+      <p>This medicine would be stopped. Its history would be kept.</p>
+      {% else %}
+      <p>This suggestion matches what is already saved.</p>
+      {% endif %}
+
+      {% if can_decide %}
+      <div class="button-row">
+        <form method="post" action="{{ url_for('medications.decide', request_id=item.id, decision='approve') }}">
+          {{ csrf() }}
+          <button type="submit" class="button button-primary button-large">Approve<span class="visually-hidden">: {{ entry.summary }}</span></button>
+        </form>
+        <form method="post" action="{{ url_for('medications.decide', request_id=item.id, decision='decline') }}">
+          {{ csrf() }}
+          <button type="submit" class="button button-secondary button-large">Decline<span class="visually-hidden">: {{ entry.summary }}</span></button>
+        </form>
+      </div>
+      {% else %}
+      <p class="muted">Waiting for {{ profile.elder_name }}.</p>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="empty">Nothing is waiting.</p>
+  {% endif %}
+</section>
+
+{% if decided %}
+<section aria-labelledby="decided-heading">
+  <h2 id="decided-heading">Recently decided</h2>
+  <table>
+    <caption class="visually-hidden">Recently decided suggestions</caption>
+    <thead>
+      <tr><th scope="col">Suggestion</th><th scope="col">From</th><th scope="col">Decision</th><th scope="col">When</th></tr>
+    </thead>
+    <tbody>
+      {% for entry in decided %}
+      <tr>
+        <th scope="row">{{ entry.summary }}</th>
+        <td>{{ entry.proposer }}</td>
+        <td>{{ entry.request.status | capitalize }}</td>
+        <td>{% if entry.request.decided_at %}<time datetime="{{ entry.request.decided_at | machine }}">{{ entry.request.decided_at | day_and_time }}</time>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endif %}
+{% endblock %}
