@@ -11,7 +11,7 @@ person can do, and whether any change to their medicines goes ahead.
 |---|---|
 | Stack | Python 3.11+, Flask, SQLite, server-rendered HTML, a small amount of plain JavaScript |
 | Runtime dependencies | 3 (Flask, python-dotenv, tzdata), plus gunicorn in the container |
-| Tests | 184 automated tests (`pytest`), lint and format checks (`ruff`), GitHub Actions CI |
+| Tests | 204 automated tests (`pytest`), lint and format checks (`ruff`), GitHub Actions CI |
 | Google services | Gemini (optional, fills in a medicine from a sentence), Cloud Run + Cloud Scheduler deployment |
 
 ---
@@ -86,6 +86,19 @@ acting on:
 Before every appointment, Hearth prepares a printable **visit summary**. It lists the elder's own
 questions first, then how each medicine was taken since the last visit, noted symptoms, and the
 current medicine list. The elder's questions get asked, and the doctor sees real data.
+
+### One circle, a different view for each person
+Everyone signs in with their own passcode and gets a screen built for what they do:
+
+| Who | View | What they see first |
+|---|---|---|
+| **The elder** (Kamala) | **Senior view**: large text, few choices | "Time to take now" with a big **I took it** button, the rest of the day by Morning/Afternoon/Evening/Night, and an **I need help** button |
+| **Caretaker** (Joseph) | **Caretaker dashboard**: sidebar and cards | Headline numbers, today's medicines with *Mark taken / Snooze / Undo*, the next doctor visit, a 7-day adherence chart, Care Weather |
+| **Family** (Priya) | **Family overview** | The week's Care Weather first, then the chart, the next visit and recent alerts. It is read-only for doses, and her changes wait for Kamala |
+| **Viewer** (Dr. Mehta) | Read-only overview | Everything to look at, nothing to change |
+
+**"I need help"** emails every caretaker and family member at once. Their dashboards then show a
+red banner for the next three hours. Pressing it twice in the same minute sends one message.
 
 **Also included:**
 - **Refill forecasts:** run-out dates from stock and daily use, with a reminder 5 days ahead.
@@ -195,15 +208,19 @@ flask --app hearth run
 ```
 
 Open <http://localhost:5000>. With `HEARTH_DEMO_MODE=1` (as in `.env.example`), a fictional example
-circle with five weeks of history is loaded automatically. Sign in with circle code **`DEMO-2026`**
-and one of these passcodes:
+circle with five weeks of history is loaded automatically. The sign-in page then shows one button
+per person, so each view is one click away. Use **Switch person** to try another. You can also
+type circle code **`DEMO-2026`** and one of these passcodes:
 
-| Sign in as | Role | Passcode | Try this |
+| Sign in as | View | Passcode | Try this |
 |---|---|---|---|
-| Kamala Rao | Circle owner (elder) | `sunrise-2468` | Approve Priya's suggestion, accept the 8:40 routine suggestion, record a dose |
-| Joseph | Caretaker (trusted) | `caring-1357` | Record doses, edit a medicine (applies directly) |
-| Priya | Family | `family-8642` | Suggest a change and see it wait for Kamala |
-| Dr. Mehta | Viewer | `doctor-9753` | Read-only: open a visit summary |
+| Kamala Rao | Senior view (circle owner) | `sunrise-2468` | Record a dose, approve Priya's suggestion, accept the 8:40 routine suggestion, press **I need help** |
+| Joseph | Caretaker dashboard (trusted) | `caring-1357` | Mark doses taken, use **Demo tools** to send a test missed-dose alert, edit a medicine (applies directly) |
+| Priya | Family overview | `family-8642` | Read the week's Care Weather, suggest a change and see it wait for Kamala |
+| Dr. Mehta | Read-only | `doctor-9753` | Open a visit summary |
+
+The **Demo tools** buttons send a real reminder email marked "[Test]", so the alert flow can be
+seen without waiting for a dose to be late. They only exist when `HEARTH_DEMO_MODE` is on.
 
 These passcodes are fictional, for the demo only. Other useful commands:
 
@@ -260,6 +277,7 @@ gcloud scheduler jobs create http hearth-reminders --schedule "* * * * *" \
 | Oversized or malformed input | 64 KB request limit; every field validated and length-capped server-side |
 | AI misuse | Gemini receives only the typed sentence, with the key sent in a header; output is schema-validated and only pre-fills a form; calls are rate-limited per member |
 | Scheduler endpoint | Hidden unless a token is configured, and needs a bearer token compared in constant time |
+| Demo shortcuts in production | The one-click demo sign-ins and the test-alert buttons only exist when `HEARTH_DEMO_MODE` is on. Without it, no demo passcodes are shown and the test-alert route returns 404 |
 | Health advice | Hearth never generates medical advice; it only shows instructions copied from the label |
 
 ## 8. Accessibility
@@ -302,7 +320,7 @@ Designed for older eyes and hands, aiming for **WCAG 2.2 AA**:
 
 ## 10. Testing
 
-184 tests run in a few seconds, each against a fresh database and a clock pinned to a known moment:
+204 tests run in a few seconds, each against a fresh database and a clock pinned to a known moment:
 
 | File | Covers |
 |---|---|
@@ -313,6 +331,7 @@ Designed for older eyes and hands, aiming for **WCAG 2.2 AA**:
 | `test_services.py` | Consent rules, schedule history, passcode rules, the Gemini client (with a fake network) |
 | `test_security.py` | Sign-in, lockout, hashing, CSRF, role permissions, isolation between circles, escaping, headers, cookies |
 | `test_web.py` | End-to-end page flows for every role, including the approval flow, doses, appointments and the demo |
+| `test_views.py` | The right view for each person, the 7-day chart, the **I need help** alert, and the demo-only test tools |
 
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lint, format and tests on Python 3.11
 and 3.13 for every push.
@@ -323,14 +342,15 @@ and 3.13 for every push.
 hearth/
   engine/          pure decision logic: schedule, escalation, rhythm, insights, refill, parsing
   repositories/    SQL for profiles, medicines, doses, appointments, journal/history/outbox
-  services/        care (doses and views), consent, reminders, mailer, messages, passcodes,
+  services/        care (doses and views), consent, reminders, alerts (help and test alerts),
+                   mailer, messages, passcodes,
                    throttle, gemini, demo
   web/             pages: auth, today, medications, appointments, circle, insights, tasks;
                    forms.py (validation) and security.py (sessions, CSRF, headers, permissions)
   templates/       Jinja templates (accessible markup, shared macros)
   static/          app.css, app.js, icon.svg
   schema.sql       database schema
-tests/             184 tests (see above)
+tests/             204 tests (see above)
 Dockerfile, .env.example, pyproject.toml, requirements*.txt
 ```
 

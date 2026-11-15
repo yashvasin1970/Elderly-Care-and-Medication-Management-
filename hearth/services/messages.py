@@ -35,8 +35,29 @@ def upcoming_doses(name: str, occurrences: Sequence[Occurrence], link: str) -> M
             f"Hello {name},",
             f"A gentle heads-up. At {when} it is time for:",
             _dose_lines(occurrences),
-            f'When you have taken it, tap "Took it" here: {link}',
+            f'When you have taken it, tap "I took it" here: {link}',
         ),
+    )
+
+
+def help_request(recipient: str, elder: str, asked_at: datetime, link: str) -> Message:
+    return Message(
+        f"{elder} asked for help",
+        _compose(
+            f"Hello {recipient},",
+            f'{elder} pressed "I need help" in Hearth at {clock(asked_at)}.'
+            " Please call or visit as soon as you can.",
+            "If you cannot reach them and you are worried, call your local emergency number.",
+            f"See {elder}'s day: {link}",
+        ),
+    )
+
+
+def as_test(message: Message) -> Message:
+    """Mark a message sent from the demo's test buttons, so nobody mistakes it."""
+    return Message(
+        f"[Test] {message.subject}",
+        "This is a test message from Hearth's demo tools.\n\n" + message.body,
     )
 
 

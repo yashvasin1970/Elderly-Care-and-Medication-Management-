@@ -419,7 +419,7 @@ def test_outbox_check_now_records_due_reminders(app, as_role, circle):
 
 def test_display_preferences_apply_to_every_page(browser: Browser, circle):
     browser.post("/preferences", {"text_size": "larger", "theme": "high", "next": "/"})
-    assert 'class="size-larger theme-high"' in browser.get("/").get_data(as_text=True)
+    assert 'class="size-larger theme-high layout-public"' in browser.get("/").get_data(as_text=True)
 
 
 def test_unknown_pages_get_a_friendly_404(browser: Browser):

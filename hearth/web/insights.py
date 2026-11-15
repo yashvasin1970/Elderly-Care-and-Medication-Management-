@@ -7,6 +7,7 @@ from datetime import timedelta
 from flask import (
     Blueprint,
     Response,
+    abort,
     current_app,
     flash,
     redirect,
@@ -19,7 +20,7 @@ from ..access import Permission
 from ..db import get_db
 from ..engine.insights import by_day, by_medication
 from ..repositories import profiles, records
-from ..services import care, reminders
+from ..services import alerts, care, reminders
 from ..services.mailer import mailer_from_config
 from . import forms
 from .security import allowed, current_member, current_profile, now, require
@@ -107,6 +108,31 @@ def check_now() -> Response:
         flash(f"{count} new reminder{'s' if count != 1 else ''} went out.", "success")
     else:
         flash("Nothing new is due right now.", "info")
+    return redirect(url_for("insights.outbox"))
+
+
+@bp.post("/demo/test-alert")
+@require(Permission.VIEW_ACTIVITY)
+def test_alert() -> Response:
+    """Demo only: send a marked test reminder so the alert flow can be seen at once."""
+    config = current_app.config
+    if not config["DEMO_MODE"]:
+        abort(404)
+    kind = request.form.get("kind", "")
+    if kind not in alerts.TEST_KINDS:
+        abort(400)
+    count = alerts.send_test_alert(
+        get_db(),
+        mailer_from_config(config),
+        current_profile(),
+        kind,
+        now(),
+        config["PUBLIC_BASE_URL"],
+    )
+    if count:
+        flash(f"Test sent: {count} email{'s' if count != 1 else ''}, shown below.", "success")
+    else:
+        flash("There is no dose today to base a test on, or no one to send it to.", "info")
     return redirect(url_for("insights.outbox"))
 
 

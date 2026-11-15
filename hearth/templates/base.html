@@ -1,90 +1,22 @@
-{% from "icons.html" import icon %}
-<!doctype html>
-<html lang="en" class="size-{{ display.text_size }} theme-{{ display.theme }}">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="{{ 'dark' if display.theme == 'dark' else 'light' }}">
-  <meta name="description" content="Hearth is a care circle the elder runs: medicines, appointments and daily routines, shared with family and caretakers.">
-  <title>{% block title %}Welcome{% endblock %} · Hearth</title>
-  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
-  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
-</head>
-<body>
-<a class="skip-link" href="#main">Skip to main content</a>
+{% from "icons.html" import icon -%}
+{#- Shared pieces, used by both layouts below. -#}
+{% macro flashes() -%}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flashes">
+  {% for category, message in messages %}
+  <p class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
+    {{ icon({'success': 'check', 'error': 'alert'}.get(category, 'info'), 32) }}<span>{{ message }}</span>
+  </p>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{%- endmacro -%}
 
-<header class="site-header">
-  <div class="wrap header-row">
-    <a class="brand" href="{{ url_for('auth.home') }}">
-      <img src="{{ url_for('static', filename='icon.svg') }}" alt="" width="44" height="44">
-      <span>Hearth</span>
-    </a>
-    {% if member %}
-    <p class="who">
-      <span class="who-circle">{{ profile.elder_name }}’s circle</span>
-      <span class="who-member">Signed in as {{ member.name }} ({{ role_label | lower }})</span>
-    </p>
-    <form method="post" action="{{ url_for('auth.sign_out') }}" class="sign-out">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button type="submit" class="button button-quiet">Sign out</button>
-    </form>
-    {% endif %}
-  </div>
-
-  {% if member %}
-  {% set here = request.endpoint %}
-  {% set more_pages = [('medications.requests_index', 'Suggested changes'), ('circle.routine', 'My daily routine' if may('decide_changes') else 'Daily routine')] %}
-  {% if may('view_activity') %}{% set more_pages = more_pages + [('insights.outbox', 'Emails sent'), ('insights.history', 'History')] %}{% endif %}
-  {% if may('manage_settings') %}{% set more_pages = more_pages + [('circle.settings', 'Settings')] %}{% endif %}
-  {% set in_more = here in more_pages | map('first') | list %}
-  <nav class="wrap main-nav" aria-label="Main">
-    <ul>
-      {% for endpoint, label, symbol in [
-        ('today.show', 'Today', 'home'),
-        ('medications.index', 'Medicines', 'pill'),
-        ('appointments.index', 'Doctor visits', 'calendar'),
-        ('insights.journal', 'Notes', 'notebook'),
-        ('insights.index', 'Care Weather', 'weather'),
-        ('circle.index', 'My circle' if may('decide_changes') else 'Circle', 'people'),
-      ] %}
-      <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ icon(symbol) }}<span>{{ label }}</span></a></li>
-      {% endfor %}
-      <li class="more-item">
-        <details class="more-menu">
-          <summary{% if in_more %} class="is-current"{% endif %}>
-            {{ icon('more') }}<span>More{% if pending_count %} <span class="count">{{ pending_count }}</span><span class="visually-hidden"> (suggested changes waiting)</span>{% endif %}</span>
-          </summary>
-          <ul>
-            {% for endpoint, label in more_pages %}
-            <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ label }}{% if endpoint == 'medications.requests_index' and pending_count %} <span class="count">{{ pending_count }} waiting</span>{% endif %}</a></li>
-            {% endfor %}
-          </ul>
-        </details>
-      </li>
-    </ul>
-  </nav>
-  {% endif %}
-</header>
-
-<main id="main" class="wrap" tabindex="-1">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  <div class="flashes">
-    {% for category, message in messages %}
-    <p class="flash flash-{{ category }}" role="{{ 'alert' if category == 'error' else 'status' }}">
-      {{ icon({'success': 'check', 'error': 'alert'}.get(category, 'info'), 32) }}<span>{{ message }}</span>
-    </p>
-    {% endfor %}
-  </div>
-  {% endif %}
-  {% endwith %}
-
-  {% block content %}{% endblock %}
-</main>
-
+{% macro display_settings() -%}
 <footer class="site-footer">
-  <div class="wrap">
+  <div class="footer-inner">
     <form method="post" action="{{ url_for('auth.preferences') }}" class="display-form" id="display">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="next" value="{{ request.path }}">
@@ -115,5 +47,140 @@
     </p>
   </div>
 </footer>
+{%- endmacro -%}
+
+{% macro sign_out_button() -%}
+<form method="post" action="{{ url_for('auth.sign_out') }}" class="sign-out">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <button type="submit" class="button button-quiet">{{ 'Switch person' if demo_mode else 'Sign out' }}</button>
+</form>
+{%- endmacro -%}
+<!doctype html>
+<html lang="en" class="size-{{ display.text_size }} theme-{{ display.theme }} layout-{{ layout }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="{{ 'dark' if display.theme == 'dark' else 'light' }}">
+  <meta name="description" content="Hearth is a care circle the elder runs: medicines, appointments and daily routines, shared with family and caretakers.">
+  <title>{% block title %}Welcome{% endblock %} · Hearth</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icon.svg') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to main content</a>
+{% set here = request.endpoint %}
+
+{% if layout == 'dashboard' %}
+{#- Caretakers, family and viewers: a dashboard with a sidebar. -#}
+<div class="dash">
+  <aside class="dash-side">
+    <a class="brand brand-light" href="{{ url_for('today.show') }}">
+      <img src="{{ url_for('static', filename='icon.svg') }}" alt="" width="40" height="40">
+      <span>Hearth</span>
+    </a>
+    <div class="patient-card">
+      <p class="patient-label">Looking after</p>
+      <p class="patient-name">{{ profile.elder_name }}</p>
+      <p class="patient-role">You: {{ member.name }} <span class="role-chip">{{ role_label }}</span></p>
+    </div>
+    <nav aria-label="Main">
+      <ul class="side-nav">
+        {% for endpoint, label, symbol in [
+          ('today.show', 'Overview', 'home'),
+          ('medications.index', 'Medicines', 'pill'),
+          ('appointments.index', 'Doctor visits', 'calendar'),
+          ('insights.journal', 'Notes', 'notebook'),
+          ('insights.index', 'Care Weather', 'weather'),
+          ('medications.requests_index', 'Suggested changes', 'suggest'),
+          ('circle.routine', 'Daily routine', 'clock'),
+          ('circle.index', 'Circle & passcodes', 'people'),
+        ] %}
+        <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>
+          {{ icon(symbol, 24) }}<span>{{ label }}</span>
+          {% if endpoint == 'medications.requests_index' and pending_count %}<span class="count">{{ pending_count }}</span><span class="visually-hidden"> waiting</span>{% endif %}
+        </a></li>
+        {% endfor %}
+        {% if may('view_activity') %}
+        <li><a href="{{ url_for('insights.outbox') }}"{% if here == 'insights.outbox' %} aria-current="page"{% endif %}>{{ icon('mail', 24) }}<span>Emails sent</span></a></li>
+        <li><a href="{{ url_for('insights.history') }}"{% if here == 'insights.history' %} aria-current="page"{% endif %}>{{ icon('history', 24) }}<span>History</span></a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  </aside>
+
+  <div class="dash-main">
+    <header class="dash-top">
+      <p class="dash-context">
+        <strong>{{ profile.elder_name }}’s circle</strong>
+        <span><time datetime="{{ moment | machine }}">{{ moment | day_and_time }}</time> (their time)</span>
+      </p>
+      <p class="dash-who">Signed in as {{ member.name }} ({{ role_label | lower }})</p>
+      {{ sign_out_button() }}
+    </header>
+    <main id="main" class="dash-content" tabindex="-1">
+      {{ flashes() }}
+      {% block content %}{% endblock %}
+    </main>
+    {{ display_settings() }}
+  </div>
+</div>
+
+{% else %}
+{#- The elder, and anyone signed out: big and simple. -#}
+<header class="site-header">
+  <div class="wrap header-row">
+    <a class="brand" href="{{ url_for('auth.home') }}">
+      <img src="{{ url_for('static', filename='icon.svg') }}" alt="" width="44" height="44">
+      <span>Hearth</span>
+    </a>
+    {% if member %}
+    <p class="who">
+      <span class="who-circle">{{ profile.elder_name }}’s circle</span>
+      <span class="who-member">Signed in as {{ member.name }} ({{ role_label | lower }})</span>
+    </p>
+    {{ sign_out_button() }}
+    {% endif %}
+  </div>
+
+  {% if member %}
+  {% set more_pages = [('medications.requests_index', 'Suggested changes'), ('circle.routine', 'My daily routine'), ('insights.outbox', 'Emails sent'), ('insights.history', 'History'), ('circle.settings', 'Settings')] %}
+  {% set in_more = here in more_pages | map('first') | list %}
+  <nav class="wrap main-nav" aria-label="Main">
+    <ul>
+      {% for endpoint, label, symbol in [
+        ('today.show', 'Today', 'home'),
+        ('medications.index', 'Medicines', 'pill'),
+        ('appointments.index', 'Doctor visits', 'calendar'),
+        ('insights.journal', 'Notes', 'notebook'),
+        ('insights.index', 'Care Weather', 'weather'),
+        ('circle.index', 'My circle', 'people'),
+      ] %}
+      <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ icon(symbol) }}<span>{{ label }}</span></a></li>
+      {% endfor %}
+      <li class="more-item">
+        <details class="more-menu">
+          <summary{% if in_more %} class="is-current"{% endif %}>
+            {{ icon('more') }}<span>More{% if pending_count %} <span class="count">{{ pending_count }}</span><span class="visually-hidden"> (suggested changes waiting)</span>{% endif %}</span>
+          </summary>
+          <ul>
+            {% for endpoint, label in more_pages %}
+            <li><a href="{{ url_for(endpoint) }}"{% if here == endpoint %} aria-current="page"{% endif %}>{{ label }}{% if endpoint == 'medications.requests_index' and pending_count %} <span class="count">{{ pending_count }} waiting</span>{% endif %}</a></li>
+            {% endfor %}
+          </ul>
+        </details>
+      </li>
+    </ul>
+  </nav>
+  {% endif %}
+</header>
+
+<main id="main" class="wrap" tabindex="-1">
+  {{ flashes() }}
+  {#- A block can only be declared once, so this layout renders the same block by name. #}
+  {{ self.content() }}
+</main>
+{{ display_settings() }}
+{% endif %}
 </body>
 </html>

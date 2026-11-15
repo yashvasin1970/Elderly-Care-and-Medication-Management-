@@ -150,14 +150,32 @@ def mark_notification(
     )
 
 
+def latest_notification_time(
+    db: sqlite3.Connection, profile_id: int, kind: str, *, since: datetime
+) -> datetime | None:
+    """When a notification of this kind was last created, if after ``since``."""
+    row = db.execute(
+        "SELECT MAX(created_at) FROM notifications"
+        " WHERE profile_id = ? AND kind = ? AND created_at >= ?",
+        (profile_id, kind, to_iso(since)),
+    ).fetchone()
+    return from_iso(row[0]) if row[0] else None
+
+
 def list_notifications(
-    db: sqlite3.Connection, profile_id: int, limit: int = 100
+    db: sqlite3.Connection,
+    profile_id: int,
+    limit: int = 100,
+    *,
+    kinds: tuple[str, ...] | None = None,
 ) -> list[Notification]:
-    rows = db.execute(
-        "SELECT * FROM notifications WHERE profile_id = ?"
-        " ORDER BY created_at DESC, id DESC LIMIT ?",
-        (profile_id, limit),
-    )
+    """Notifications, newest first, optionally only of the given kinds."""
+    sql = "SELECT * FROM notifications WHERE profile_id = ?"
+    params: list[object] = [profile_id]
+    if kinds:
+        sql += f" AND kind IN ({', '.join('?' for _ in kinds)})"
+        params.extend(kinds)
+    rows = db.execute(sql + " ORDER BY created_at DESC, id DESC LIMIT ?", (*params, limit))
     return [
         Notification(
             id=row["id"],

@@ -27,6 +27,7 @@ class Permission(StrEnum):
     MANAGE_ROUTINE = "manage_routine"
     MANAGE_CIRCLE = "manage_circle"
     MANAGE_SETTINGS = "manage_settings"
+    ASK_FOR_HELP = "ask_for_help"
 
 
 _P = Permission

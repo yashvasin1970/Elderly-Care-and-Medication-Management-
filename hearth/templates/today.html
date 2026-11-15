@@ -90,7 +90,8 @@
 {% endmacro %}
 
 {% block content %}
-{% set is_owner = may('decide_changes') %}
+{# The Senior view: only the elder sees this page (see web/today.py). #}
+{% set is_owner = True %}
 {% set can_log = may('log_doses') %}
 
 <div class="today-head">
@@ -98,9 +99,18 @@
     <h1>{% if is_owner %}{{ greeting }}, {{ member.name.split(' ')[0] }}{% else %}{{ profile.elder_name }}’s day{% endif %}</h1>
     <p class="today-date"><time datetime="{{ local_now | machine }}">{{ local_now | long_date }}</time></p>
   </div>
-  <button type="button" class="button button-secondary button-large" data-speak="{{ spoken }}" hidden>
-    {{ icon('speaker') }}<span>Read this to me</span>
-  </button>
+  <div class="head-actions">
+    <button type="button" class="button button-secondary button-large" data-speak="{{ spoken }}" hidden>
+      {{ icon('speaker') }}<span>Read this to me</span>
+    </button>
+    {% if may('ask_for_help') %}
+    <form method="post" action="{{ url_for('today.ask_for_help') }}"
+          data-confirm="Ask your family and caretakers to get in touch with you now?">
+      {{ csrf() }}
+      <button type="submit" class="button button-help button-large">{{ icon('phone') }}<span>I need help</span></button>
+    </form>
+    {% endif %}
+  </div>
 </div>
 
 {% if total %}

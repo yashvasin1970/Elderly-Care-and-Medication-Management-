@@ -34,27 +34,38 @@
   </section>
 
   <div class="welcome-side">
+    {% if demo_logins %}
+    <section class="card demo-card" aria-labelledby="demo-heading">
+      <h2 id="demo-heading">Try the example circle</h2>
+      <p>Each person sees Hearth differently. Pick one to sign in as:</p>
+      <ul class="demo-people">
+        {% for person in demo_logins %}
+        <li>
+          <form method="post" action="{{ url_for('auth.sign_in') }}">
+            {{ csrf() }}
+            <input type="hidden" name="circle_code" value="{{ demo_code }}">
+            <input type="hidden" name="passcode" value="{{ person.passcode }}">
+            <button type="submit" class="demo-person">
+              <span class="demo-name">{{ person.name }}</span>
+              <span class="demo-view">{{ person.view }}</span>
+              <span class="demo-about">{{ person.about }}</span>
+            </button>
+          </form>
+        </li>
+        {% endfor %}
+      </ul>
+      <p class="small-print">
+        Or type it in: circle code <span class="code">{{ demo_code }}</span>, passcodes
+        {% for person in demo_logins %}<span class="code">{{ person.passcode }}</span> ({{ person.name }}){{ ', ' if not loop.last else '.' }}{% endfor %}
+      </p>
+    </section>
+    {% endif %}
+
     <section class="card" aria-labelledby="start-heading">
       <h2 id="start-heading">New to Hearth?</h2>
       <p>Set up a circle for yourself, or sit with a parent and set one up together. It takes two minutes.</p>
       <p><a class="button button-secondary button-large" href="{{ url_for('auth.start') }}">Create a care circle</a></p>
     </section>
-
-    {% if demo_logins %}
-    <section class="card" aria-labelledby="demo-heading">
-      <h2 id="demo-heading">Try the example circle</h2>
-      <p>Circle code: <strong class="code">{{ demo_code }}</strong></p>
-      <table class="plain-table">
-        <caption class="visually-hidden">Example sign-in details</caption>
-        <thead><tr><th scope="col">Sign in as</th><th scope="col">Passcode</th></tr></thead>
-        <tbody>
-          {% for who, passcode in demo_logins %}
-          <tr><th scope="row">{{ who }}</th><td><span class="code">{{ passcode }}</span></td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </section>
-    {% endif %}
   </div>
 </div>
 
@@ -74,8 +85,8 @@
       <p>Your family is only told if a dose is still not taken, and only for the medicines you mark as important.</p>
     </li>
     <li class="card">
-      <h3>Ready for the doctor</h3>
-      <p>Before each visit, Hearth prepares one page with your own questions at the top.</p>
+      <h3>Help is one button away</h3>
+      <p>Press “I need help” and everyone who looks after you gets a message straight away.</p>
     </li>
   </ul>
 </section>

@@ -103,6 +103,15 @@ def by_day(records: Sequence[DoseRecord]) -> dict[date, Adherence]:
     return {day: summarise([r for r in records if r.scheduled_at.date() == day]) for day in days}
 
 
+def band_for(rate: int | None) -> str:
+    """Group a rate for charts: "good" (90%+), "fair" (75-89%), "low" or "none"."""
+    if rate is None:
+        return "none"
+    if rate >= 90:
+        return "good"
+    return "fair" if rate >= 75 else "low"
+
+
 def weather_for(adherence: Adherence) -> Weather:
     """Map an adherence rate to a weather reading."""
     rate = adherence.rate

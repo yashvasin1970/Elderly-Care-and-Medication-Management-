@@ -53,7 +53,7 @@ def _home(*, error: str | None, code: str) -> str:
         error=error,
         circle_code=passcodes.format_circle_code(code) if code else "",
         demo_code=passcodes.format_circle_code(demo.DEMO_CIRCLE_CODE),
-        demo_logins=list(demo.DEMO_PASSCODES.items()) if demo_mode else [],
+        demo_logins=demo.DEMO_PEOPLE if demo_mode else (),
     )
 
 

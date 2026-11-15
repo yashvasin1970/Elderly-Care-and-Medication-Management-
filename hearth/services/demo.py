@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import random
 import sqlite3
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from datetime import date, datetime, time, timedelta
 
 from ..access import Role
@@ -23,13 +23,40 @@ from . import care, passcodes, reminders
 DEMO_CIRCLE_CODE = "DEMO2026"
 DEMO_BASE_URL = "http://localhost:5000"
 
+
+@dataclass(frozen=True, slots=True)
+class DemoPerson:
+    """Someone in the example circle, as offered on the sign-in page."""
+
+    name: str
+    passcode: str
+    view: str
+    about: str
+
+
 #: Demo sign-in details, also listed in the README. Never use these for real data.
-DEMO_PASSCODES = {
-    "Kamala Rao": "sunrise-2468",
-    "Joseph": "caring-1357",
-    "Priya": "family-8642",
-    "Dr. Mehta": "doctor-9753",
-}
+DEMO_PEOPLE: tuple[DemoPerson, ...] = (
+    DemoPerson(
+        "Kamala Rao",
+        "sunrise-2468",
+        "Senior view",
+        "The elder who owns the circle: large, simple screens and an “I need help” button.",
+    ),
+    DemoPerson(
+        "Joseph",
+        "caring-1357",
+        "Caretaker dashboard",
+        "Records doses and sees the whole day, with demo tools to test alerts.",
+    ),
+    DemoPerson(
+        "Priya",
+        "family-8642",
+        "Family overview",
+        "Follows from afar. Her changes wait for Kamala’s approval.",
+    ),
+    DemoPerson("Dr. Mehta", "doctor-9753", "Read-only view", "Can look, but not change anything."),
+)
+DEMO_PASSCODES = {person.name: person.passcode for person in DEMO_PEOPLE}
 
 _HISTORY_DAYS = 35
 _REPLAY_HOURS = 30

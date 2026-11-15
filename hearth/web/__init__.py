@@ -5,13 +5,14 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 
-from flask import Flask, Response, g, redirect, render_template, url_for
+from flask import Flask, Response, current_app, g, redirect, render_template, url_for
 from werkzeug.exceptions import HTTPException
 
-from ..access import ROLE_LABELS, Permission
+from ..access import ROLE_LABELS, Permission, Role
 from ..db import get_db
 from ..engine.models import DoseStatus
 from ..repositories import medications as medication_store
+from ..repositories.profiles import Member
 from ..services.passcodes import format_circle_code
 from ..timeutil import friendly_clock, get_zone
 from . import appointments, auth, circle, insights, medications, security, tasks, today
@@ -101,11 +102,15 @@ def _template_context() -> dict[str, Any]:
     member = g.get("member")
     profile = g.get("profile")
     pending_count = 0
-    if member is not None and security.allowed(Permission.DECIDE_CHANGES):
+    if member is not None:
         pending_count = medication_store.count_pending_requests(get_db(), profile.id)
     return {
         "member": member,
         "profile": profile,
+        # The elder gets the large, simple Senior layout; everyone else a dashboard.
+        "layout": _layout(member),
+        "moment": security.now() if member is not None else None,
+        "demo_mode": current_app.config["DEMO_MODE"],
         "may": lambda name: security.allowed(Permission(name)),
         "display": auth.read_display_preferences(),
         "text_sizes": auth.TEXT_SIZES,
@@ -114,6 +119,12 @@ def _template_context() -> dict[str, Any]:
         "circle_code": format_circle_code(profile.circle_code) if profile else "",
         "role_label": ROLE_LABELS[member.role] if member else "",
     }
+
+
+def _layout(member: Member | None) -> str:
+    if member is None:
+        return "public"
+    return "senior" if member.role is Role.ELDER else "dashboard"
 
 
 # --- error pages ----------------------------------------------------------
